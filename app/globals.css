@@ -1,26 +1,382 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-heading: var(--font-poppins), var(--font-sans);
+
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-fade-up: fadeUp 0.5s ease forwards;
 }
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Brand: Saffron-orange — warm, energetic, trustworthy */
+    --background: #FAFAF8;
+    --foreground: #1C1917;
+    
+    --card: #FFFFFF;
+    --card-foreground: #1C1917;
+    
+    --popover: #FFFFFF;
+    --popover-foreground: #1C1917;
+    
+    /* Primary: Vibrant Saffron-Orange */
+    --primary: #E8470A;
+    --primary-foreground: #FFFFFF;
+    
+    --secondary: #FFF7F3;
+    --secondary-foreground: #1C1917;
+    
+    --muted: #F5F5F4;
+    --muted-foreground: #78716C;
+    
+    /* Accent: Slightly lighter orange */
+    --accent: #F97316;
+    --accent-foreground: #FFFFFF;
+    
+    --destructive: #DC2626;
+    --destructive-foreground: #FFFFFF;
+
+    --success: #16A34A;
+    --warning: #D97706;
+    --danger: #DC2626;
+    
+    --border: #E7E5E4;
+    --input: #D6D3D1;
+    --ring: #E8470A;
+    
+    --radius: 0.75rem;
+
+    /* Section alternate backgrounds */
+    --section-alt: #F8F6F4;
+    --section-dark: #1C1917;
+  }
+
+  .dark {
+    --background: #0C0A09;
+    --foreground: #FAFAF8;
+    
+    --card: #1C1917;
+    --card-foreground: #FAFAF8;
+    
+    --popover: #1C1917;
+    --popover-foreground: #FAFAF8;
+    
+    --primary: #F97316;
+    --primary-foreground: #0C0A09;
+    
+    --secondary: #292524;
+    --secondary-foreground: #FAFAF8;
+    
+    --muted: #292524;
+    --muted-foreground: #A8A29E;
+    
+    --accent: #EA580C;
+    --accent-foreground: #FFFFFF;
+    
+    --destructive: #F87171;
+    --destructive-foreground: #0C0A09;
+    
+    --success: #22C55E;
+    --warning: #F59E0B;
+    --danger: #F87171;
+    
+    --border: #292524;
+    --input: #44403C;
+    --ring: #F97316;
+
+    --section-alt: #161412;
+    --section-dark: #F5F5F4;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+}
+
+/* =====================================================
+   TYPOGRAPHY
+   ===================================================== */
+h1 {
+  @apply text-4xl md:text-5xl lg:text-6xl font-bold leading-tight;
+}
+h2 {
+  @apply text-2xl md:text-3xl lg:text-[2.25rem] font-semibold leading-snug;
+}
+h3 {
+  @apply text-lg md:text-xl font-semibold leading-snug;
+}
+
+/* =====================================================
+   LAYOUT UTILITIES
+   ===================================================== */
+.container-custom {
+  @apply mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8;
+}
+
+.section-padding {
+  @apply py-12 md:py-16 lg:py-20;
+}
+
+.section-padding-sm {
+  @apply py-8 md:py-12 lg:py-16;
+}
+
+/* =====================================================
+   CARD UTILITIES
+   ===================================================== */
+.card-hover {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-xl;
+}
+
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.07);
+}
+
+.card-shadow-hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 8px 32px rgba(0,0,0,0.08);
+}
+
+/* =====================================================
+   HORIZONTAL SCROLL CAROUSEL
+   ===================================================== */
+.scroll-container {
+  @apply flex gap-4 overflow-x-auto pb-4;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-container::-webkit-scrollbar {
+  height: 4px;
+}
+.scroll-container::-webkit-scrollbar-track {
+  @apply bg-muted rounded-full;
+}
+.scroll-container::-webkit-scrollbar-thumb {
+  @apply bg-primary/30 rounded-full;
+}
+
+.scroll-item {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* =====================================================
+   ANIMATIONS
+   ===================================================== */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease forwards;
+}
+
+/* =====================================================
+   GRADIENT UTILITIES
+   ===================================================== */
+.gradient-primary {
+  background: linear-gradient(135deg, #E8470A 0%, #F97316 100%);
+}
+
+.gradient-dark {
+  background: linear-gradient(135deg, #1C1917 0%, #292524 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.7) 100%);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #E8470A 0%, #F97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* =====================================================
+   SECTION BACKGROUNDS
+   ===================================================== */
+.bg-section-alt {
+  background-color: var(--section-alt);
+}
+
+/* =====================================================
+   BUTTON UTILITIES
+   ===================================================== */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl px-6 py-3 transition-all duration-200 inline-flex items-center gap-2;
+}
+
+.btn-outline {
+  @apply border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground font-semibold rounded-xl px-6 py-3 transition-all duration-200 inline-flex items-center gap-2;
+}
+
+/* =====================================================
+   CUSTOM SCROLLBAR
+   ===================================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/40;
+}
+
+/* =====================================================
+   HIDE SCROLLBAR
+   ===================================================== */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* =====================================================
+   SELECTION
+   ===================================================== */
+::selection {
+  @apply bg-primary/20 text-foreground;
+}
+
+/* =====================================================
+   IMAGE OVERLAY
+   ===================================================== */
+.img-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+}
+
+.img-overlay-subtle {
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%);
+}
+
+/* =====================================================
+   BADGE VARIANTS
+   ===================================================== */
+.badge-verified {
+  @apply inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-2.5 py-1 rounded-full;
+}
+
+.badge-orange {
+  @apply inline-flex items-center gap-1 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-semibold px-2.5 py-1 rounded-full;
+}
+
+/* =====================================================
+   RATING STARS
+   ===================================================== */
+.star-filled {
+  color: #F59E0B;
+  fill: #F59E0B;
+}
+
+.star-empty {
+  color: #D6D3D1;
+}
+
+/* =====================================================
+   FOCUS STATES
+   ===================================================== */
+*:focus-visible {
+  @apply outline-none ring-2 ring-primary ring-offset-2;
+}
+
+/* =====================================================
+   SECTION HEADING PATTERN
+   ===================================================== */
+.section-label {
+  @apply text-xs font-bold tracking-widest uppercase text-primary mb-2 block;
+}
+
+.section-heading {
+  @apply text-2xl md:text-3xl font-bold text-foreground mb-3;
+}
+
+.section-subtext {
+  @apply text-muted-foreground text-base leading-relaxed;
+}
+
+/* =====================================================
+   PROPERTY CARD SPECIFIC
+   ===================================================== */
+.pg-card-image {
+  @apply relative aspect-4/3 w-full overflow-hidden bg-muted rounded-t-2xl;
+}
+
+/* =====================================================
+   MARQUEE / TICKER (for popular searches)
+   ===================================================== */
+.popular-chip {
+  @apply inline-flex items-center gap-1.5 px-4 py-2 bg-white/90 backdrop-blur-sm text-foreground text-sm font-medium rounded-full border border-border/50 hover:border-primary hover:text-primary cursor-pointer transition-colors whitespace-nowrap shrink-0;
 }

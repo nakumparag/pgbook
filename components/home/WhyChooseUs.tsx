@@ -1,0 +1,84 @@
+"use client";
+
+import { Search, SlidersHorizontal, ShieldCheck, BarChart3, MapPin, Users } from "lucide-react";
+import { motion } from "framer-motion";
+
+const BENEFITS = [
+  {
+    icon: Search,
+    title: "Smart Search",
+    description: "Search by city, locality, college, workplace or landmark. Our filters help you narrow down exactly what you need.",
+    color: "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Verified Listings",
+    description: "Properties with the Verified badge are physically checked by our team for accuracy and quality.",
+    color: "bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400",
+  },
+  {
+    icon: SlidersHorizontal,
+    title: "Transparent Info",
+    description: "See exact rent, deposit, amenities, house rules and room options — no hidden surprises.",
+    color: "bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400",
+  },
+  {
+    icon: Users,
+    title: "Direct Owner Contact",
+    description: "Message or call the PG owner directly. No broker, no middleman, no commission.",
+    color: "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
+  },
+  {
+    icon: BarChart3,
+    title: "Compare PGs",
+    description: "Save multiple PGs and compare them side by side on price, amenities and location.",
+    color: "bg-pink-50 dark:bg-pink-950/30 text-pink-600 dark:text-pink-400",
+  },
+  {
+    icon: MapPin,
+    title: "Location Discovery",
+    description: "Browse by area, college proximity, or business hub. Find PGs exactly where you need to be.",
+    color: "bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400",
+  },
+];
+
+export function WhyPGBook() {
+  return (
+    <section className="section-padding bg-background" aria-labelledby="why-pgbook-heading">
+      <div className="container-custom">
+
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="section-label" aria-hidden="true">Our Promise</span>
+          <h2 id="why-pgbook-heading" className="section-heading mb-3">
+            Why Choose PGBook?
+          </h2>
+          <p className="section-subtext">
+            We&apos;re building the most complete and honest PG discovery platform in Gujarat.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {BENEFITS.map((benefit, idx) => (
+            <motion.div
+              key={benefit.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ delay: idx * 0.07, duration: 0.4 }}
+              className="flex gap-4 p-6 bg-card rounded-2xl border border-border/50 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${benefit.color}`}>
+                <benefit.icon className="w-5 h-5" aria-hidden="true" />
+              </div>
+              <div>
+                <h3 className="font-bold text-foreground text-base mb-1.5">{benefit.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{benefit.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+  );
+}
