@@ -11,7 +11,7 @@ export default async function AdminDashboard() {
     .from("approval_requests")
     .select(`
       id, status, created_at, request_type,
-      profiles!owner_id ( full_name, phone, id_type, id_number, id_document_url, verification_status ),
+      profiles!owner_id ( full_name, phone, owner_profiles ( status, id_type, id_number, id_document_url ) ),
       pgs!pg_id ( id, name, city_id, cities(name) )
     `)
     .eq("status", "PENDING")
@@ -20,17 +20,18 @@ export default async function AdminDashboard() {
   // Generate signed URLs for private documents
   const approvalRequests = await Promise.all((rawApprovalRequests || []).map(async (req: any) => {
     let signedDocUrl = null;
-    if (req.profiles?.id_document_url) {
-      if (!req.profiles.id_document_url.startsWith('http')) {
-        const { data } = await supabase.storage.from('owner-documents').createSignedUrl(req.profiles.id_document_url, 60 * 60);
+    const ownerProfile = Array.isArray(req.profiles?.owner_profiles) ? req.profiles?.owner_profiles[0] : req.profiles?.owner_profiles;
+    if (ownerProfile?.id_document_url) {
+      if (!ownerProfile.id_document_url.startsWith('http')) {
+        const { data } = await supabase.storage.from('owner-documents').createSignedUrl(ownerProfile.id_document_url, 60 * 60);
         if (data?.signedUrl) {
           signedDocUrl = data.signedUrl;
         }
       } else {
-        signedDocUrl = req.profiles.id_document_url; // Fallback for any old public URLs
+        signedDocUrl = ownerProfile.id_document_url; // Fallback for any old public URLs
       }
     }
-    return { ...req, signedDocUrl };
+    return { ...req, ownerProfile, signedDocUrl };
   }));
 
   // Fetch active listings
@@ -120,7 +121,7 @@ export default async function AdminDashboard() {
                 <tr key={req.id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-6 py-4">
                     <p className="font-bold text-foreground text-base">{req.profiles?.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{req.profiles?.id_type}: {req.profiles?.id_number}</p>
+                    <p className="text-xs text-muted-foreground">{req.ownerProfile?.id_type}: {req.ownerProfile?.id_number}</p>
                     <p className="text-xs text-muted-foreground">{req.profiles?.phone}</p>
                   </td>
                   <td className="px-6 py-4">

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -49,6 +49,36 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/' // Could be dashboard
     return NextResponse.redirect(url)
+  }
+
+  // Admin route protection
+  if (user && request.nextUrl.pathname.startsWith('/admin')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'ADMIN') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Owner route protection
+  if (user && request.nextUrl.pathname.startsWith('/owner')) {
+    const { data: ownerData } = await supabase
+      .from('owner_profiles')
+      .select('status')
+      .eq('user_id', user.id)
+      .single()
+
+    if (ownerData?.status !== 'APPROVED') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/become-owner'
+      return NextResponse.redirect(url)
+    }
   }
 
   return supabaseResponse

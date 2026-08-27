@@ -4,13 +4,13 @@ import { PopularCities } from "@/components/home/PopularCities";
 import { PopularPGs } from "@/components/home/PopularPGs";
 import { SuggestedPGs } from "@/components/home/SuggestedPGs";
 import { HighestRatedPGs } from "@/components/home/HighestRatedPGs";
-import { BrowseByBudget } from "@/components/home/BrowseByBudget";
+
 import { BrowseByRoomType } from "@/components/home/BrowseByRoomType";
 import { StudentPGs } from "@/components/home/StudentPGs";
 import { WorkingProfessionalPGs } from "@/components/home/WorkingProfessionalPGs";
 import { GenderAndCoLiving } from "@/components/home/GenderAndCoLiving";
 import { PGsNearColleges } from "@/components/home/PGsNearColleges";
-import { PGsNearBusinessHubs } from "@/components/home/PGsNearBusinessHubs";
+
 import { PopularLocalities } from "@/components/home/PopularLocalities";
 import { WhyPGBook } from "@/components/home/WhyChooseUs";
 import { HowItWorks } from "@/components/home/HowItWorks";
@@ -57,27 +57,31 @@ export default async function HomePage() {
     .eq("status", "APPROVED");
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen gap-y-8 md:gap-y-12 pb-16">
       {/* 1. Hero with search */}
       <Hero />
 
       {/* 2. Popular Cities */}
       <PopularCities />
 
+      {/* 17. Popular Localities */}
+      <PopularLocalities />
+
+
+      {/* 9. Browse By Room Type */}
+      <BrowseByRoomType />
+
+      {/* 12–14. Girls / Boys / Co-Living */}
+      <GenderAndCoLiving pgs={pgs || []} />
+
       {/* 5. Popular PGs Carousel */}
       <PopularPGs pgs={pgs || []} />
-
-      {/* 6. Suggested PGs */}
-      <SuggestedPGs pgs={pgs || []} />
 
       {/* 7. Highest Rated PGs */}
       <HighestRatedPGs pgs={pgs || []} />
 
-      {/* 8. Browse By Budget */}
-      <BrowseByBudget />
-
-      {/* 9. Browse By Room Type */}
-      <BrowseByRoomType />
+      {/* 6. Suggested PGs */}
+      <SuggestedPGs pgs={pgs || []} />
 
       {/* 10. Student PGs */}
       <StudentPGs pgs={pgs || []} />
@@ -85,17 +89,9 @@ export default async function HomePage() {
       {/* 11. Working Professional PGs */}
       <WorkingProfessionalPGs pgs={pgs || []} />
 
-      {/* 12–14. Girls / Boys / Co-Living */}
-      <GenderAndCoLiving pgs={pgs || []} />
-
       {/* 15. PGs Near Colleges */}
       <PGsNearColleges />
 
-      {/* 16. PGs Near Business Hubs */}
-      <PGsNearBusinessHubs />
-
-      {/* 17. Popular Localities */}
-      <PopularLocalities />
 
       {/* 18. Why PGBook */}
       <WhyPGBook />

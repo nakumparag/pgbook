@@ -59,21 +59,21 @@
     --popover: #FFFFFF;
     --popover-foreground: #1C1917;
     
-    /* Primary: Vibrant Saffron-Orange */
-    --primary: #E8470A;
+    /* Primary: Professional Blue */
+    --primary: #2563EB;
     --primary-foreground: #FFFFFF;
     
-    --secondary: #FFF7F3;
-    --secondary-foreground: #1C1917;
+    --secondary: #EFF6FF;
+    --secondary-foreground: #1E3A8A;
     
-    --muted: #F5F5F4;
-    --muted-foreground: #78716C;
+    --muted: #F8FAFC;
+    --muted-foreground: #64748B;
     
-    /* Accent: Slightly lighter orange */
-    --accent: #F97316;
+    /* Accent: Lighter Blue */
+    --accent: #3B82F6;
     --accent-foreground: #FFFFFF;
     
-    --destructive: #DC2626;
+    --destructive: #EF4444;
     --destructive-foreground: #FFFFFF;
 
     --success: #16A34A;
@@ -82,9 +82,9 @@
     
     --border: #E7E5E4;
     --input: #D6D3D1;
-    --ring: #E8470A;
+    --ring: #2563EB;
     
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Section alternate backgrounds */
     --section-alt: #F8F6F4;
@@ -101,16 +101,16 @@
     --popover: #1C1917;
     --popover-foreground: #FAFAF8;
     
-    --primary: #F97316;
-    --primary-foreground: #0C0A09;
+    --primary: #3B82F6;
+    --primary-foreground: #FFFFFF;
     
-    --secondary: #292524;
-    --secondary-foreground: #FAFAF8;
+    --secondary: #1E293B;
+    --secondary-foreground: #F8FAFC;
     
-    --muted: #292524;
-    --muted-foreground: #A8A29E;
+    --muted: #0F172A;
+    --muted-foreground: #94A3B8;
     
-    --accent: #EA580C;
+    --accent: #60A5FA;
     --accent-foreground: #FFFFFF;
     
     --destructive: #F87171;
@@ -120,9 +120,9 @@
     --warning: #F59E0B;
     --danger: #F87171;
     
-    --border: #292524;
-    --input: #44403C;
-    --ring: #F97316;
+    --border: #1E293B;
+    --input: #334155;
+    --ring: #3B82F6;
 
     --section-alt: #161412;
     --section-dark: #F5F5F4;
@@ -179,11 +179,11 @@ h3 {
 }
 
 .card-shadow {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.07);
+  box-shadow: 0 4px 24px -4px rgba(0,0,0,0.04), 0 8px 16px -4px rgba(0,0,0,0.02);
 }
 
 .card-shadow-hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 8px 32px rgba(0,0,0,0.08);
+  box-shadow: 0 12px 32px -4px rgba(0,0,0,0.08), 0 16px 24px -4px rgba(0,0,0,0.04);
 }
 
 /* =====================================================
@@ -240,7 +240,7 @@ h3 {
    GRADIENT UTILITIES
    ===================================================== */
 .gradient-primary {
-  background: linear-gradient(135deg, #E8470A 0%, #F97316 100%);
+  background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%);
 }
 
 .gradient-dark {
@@ -252,7 +252,7 @@ h3 {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #E8470A 0%, #F97316 100%);
+  background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -330,7 +330,7 @@ h3 {
 }
 
 .badge-orange {
-  @apply inline-flex items-center gap-1 bg-orange-50 text-orange-700 border border-orange-200 text-xs font-semibold px-2.5 py-1 rounded-full;
+  @apply inline-flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold px-2.5 py-1 rounded-full;
 }
 
 /* =====================================================

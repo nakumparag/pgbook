@@ -36,15 +36,24 @@ export default async function OwnerLayout({
     redirect('/login?next=/owner/dashboard')
   }
 
-  // Fetch user profile to check role
+  // Fetch user profile and owner_profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  // Allow OWNER or ADMIN to access owner routes
-  if (!profile || (profile.role !== 'OWNER' && profile.role !== 'ADMIN')) {
+  const { data: ownerProfile } = await supabase
+    .from('owner_profiles')
+    .select('status')
+    .eq('user_id', user.id)
+    .single()
+
+  const isApprovedOwner = ownerProfile?.status === 'APPROVED'
+  const isAdmin = profile?.role === 'ADMIN'
+
+  // Allow APPROVED OWNER or ADMIN to access owner routes
+  if (!isApprovedOwner && !isAdmin) {
     redirect('/dashboard?error=access_denied')
   }
 

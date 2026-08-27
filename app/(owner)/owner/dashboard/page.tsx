@@ -18,7 +18,8 @@ export default async function OwnerDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase.from("profiles").select("full_name, id_verified, verification_status, role").eq("id", user?.id || "").single();
+  const { data: profile } = await supabase.from("profiles").select("full_name, id_verified, role").eq("id", user?.id || "").single();
+  const { data: ownerProfile } = await supabase.from("owner_profiles").select("status").eq("user_id", user?.id || "").single();
 
   const { data: inquiries } = await supabase
     .from("inquiries")
@@ -94,7 +95,7 @@ export default async function OwnerDashboard() {
         </Button>
       </div>
 
-      {profile?.role === "OWNER" && profile?.verification_status === "PENDING" && (
+      {ownerProfile?.status === "PENDING" && (
         <div className="bg-orange-100 border-l-4 border-orange-500 p-4 mb-8 rounded-r-xl flex items-center justify-between">
           <div>
             <h3 className="text-orange-800 font-bold">Verification Pending</h3>
@@ -108,7 +109,7 @@ export default async function OwnerDashboard() {
         </div>
       )}
 
-      {profile?.role === "OWNER" && profile?.verification_status === "REJECTED" && (
+      {ownerProfile?.status === "REJECTED" && (
         <div className="bg-destructive/10 border-l-4 border-destructive p-4 mb-8 rounded-r-xl flex items-center justify-between">
           <div>
             <h3 className="text-destructive font-bold">Verification Rejected</h3>

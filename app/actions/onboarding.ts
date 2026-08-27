@@ -37,41 +37,67 @@ export async function updateOwnerVerification(formData: FormData) {
       idDocumentUrl = filePath;
     }
 
-    const updateData: any = {
+    // Update basic user profile
+    const profileUpdateData: any = {
       full_name: fullName,
       phone,
+    };
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update(profileUpdateData)
+      .eq('id', user.id);
+
+    if (profileError) {
+      console.error("Profile update error:", profileError);
+      return { success: false, error: "Failed to update profile details" };
+    }
+
+    // Upsert owner profile
+    const ownerProfileData: any = {
+      user_id: user.id,
+      status: "PENDING",
       owner_type: ownerType,
       id_type: idType,
       id_number: idNumber,
-      verification_status: "PENDING"
+      updated_at: new Date().toISOString()
     };
-
+    
     if (idDocumentUrl) {
-      updateData.id_document_url = idDocumentUrl;
+      ownerProfileData.id_document_url = idDocumentUrl;
     }
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', user.id);
+    const { error: ownerError } = await supabase
+      .from('owner_profiles')
+      .upsert(ownerProfileData, { onConflict: 'user_id' });
 
-    if (updateError) {
-      console.error("Profile update error:", updateError);
+    if (ownerError) {
+      console.error("Owner profile update error:", ownerError);
       return { success: false, error: "Failed to save verification details" };
     }
 
     // Insert an approval request for the owner verification
-    const { error: requestError } = await supabase
+    // Check if one already exists
+    const { data: existingRequest } = await supabase
       .from('approval_requests')
-      .insert({
-        owner_id: user.id,
-        request_type: 'OWNER',
-        status: 'PENDING'
-      });
-      
-    if (requestError) {
-       console.error("Failed to create approval request:", requestError);
-       // We don't fail the whole function here, but we could
+      .select('id')
+      .eq('owner_id', user.id)
+      .eq('request_type', 'OWNER')
+      .eq('status', 'PENDING')
+      .single();
+
+    if (!existingRequest) {
+      const { error: requestError } = await supabase
+        .from('approval_requests')
+        .insert({
+          owner_id: user.id,
+          request_type: 'OWNER',
+          status: 'PENDING'
+        });
+        
+      if (requestError) {
+         console.error("Failed to create approval request:", requestError);
+      }
     }
 
     return { success: true };

@@ -35,12 +35,7 @@ export interface Database {
           full_name: string | null
           avatar_url: string | null
           phone: string | null
-          owner_type: string | null
           id_verified: boolean
-          verification_status: OwnerVerificationStatus
-          id_type: string | null
-          id_number: string | null
-          id_document_url: string | null
           created_at: string
           updated_at: string
         }
@@ -49,12 +44,7 @@ export interface Database {
           role?: UserRole
           full_name?: string | null
           avatar_url?: string | null
-          owner_type?: string | null
           id_verified?: boolean
-          verification_status?: OwnerVerificationStatus
-          id_type?: string | null
-          id_number?: string | null
-          id_document_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -64,12 +54,7 @@ export interface Database {
           full_name?: string | null
           avatar_url?: string | null
           phone?: string | null
-          owner_type?: string | null
           id_verified?: boolean
-          verification_status?: OwnerVerificationStatus
-          id_type?: string | null
-          id_number?: string | null
-          id_document_url?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -78,6 +63,51 @@ export interface Database {
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      // ── owner_profiles ──────────────────────────────────────
+      owner_profiles: {
+        Row: {
+          id: string
+          user_id: string
+          status: OwnerVerificationStatus
+          owner_type: string | null
+          id_type: string | null
+          id_number: string | null
+          id_document_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          status?: OwnerVerificationStatus
+          owner_type?: string | null
+          id_type?: string | null
+          id_number?: string | null
+          id_document_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          status?: OwnerVerificationStatus
+          owner_type?: string | null
+          id_type?: string | null
+          id_number?: string | null
+          id_document_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]

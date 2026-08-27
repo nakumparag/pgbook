@@ -38,11 +38,15 @@ function VerificationContent() {
       if (profile) {
         setFullName(profile.full_name || "");
         setPhone(profile.phone || "");
-        setOwnerType(profile.owner_type || "PG Owner");
-        setIdType(profile.id_type || "Aadhaar");
-        setIdNumber(profile.id_number || "");
-        setExistingDocUrl(profile.id_document_url || null);
-        setVerificationStatus(profile.verification_status || "PENDING");
+      }
+
+      const { data: ownerProfile } = await supabase.from("owner_profiles").select("*").eq("user_id", user.id).single();
+      if (ownerProfile) {
+        setOwnerType(ownerProfile.owner_type || "PG Owner");
+        setIdType(ownerProfile.id_type || "Aadhaar");
+        setIdNumber(ownerProfile.id_number || "");
+        setExistingDocUrl(ownerProfile.id_document_url || null);
+        setVerificationStatus(ownerProfile.status || "PENDING");
       }
       setLoading(false);
     };

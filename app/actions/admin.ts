@@ -85,13 +85,14 @@ export async function resolveApprovalRequest(requestId: string, approve: boolean
 
   if (approve) {
     if (req.request_type === 'OWNER') {
-      await supabase.from("profiles").update({ verification_status: "APPROVED", id_verified: true }).eq("id", req.owner_id);
+      await supabase.from("owner_profiles").update({ status: "APPROVED" }).eq("user_id", req.owner_id);
+      await supabase.from("profiles").update({ id_verified: true }).eq("id", req.owner_id);
     } else if (req.request_type === 'PG' && req.pg_id) {
       await supabase.from("pgs").update({ status: "APPROVED", is_verified: true, verified_at: new Date().toISOString() }).eq("id", req.pg_id);
     }
   } else {
     if (req.request_type === 'OWNER') {
-      await supabase.from("profiles").update({ verification_status: "REJECTED" }).eq("id", req.owner_id);
+      await supabase.from("owner_profiles").update({ status: "REJECTED" }).eq("user_id", req.owner_id);
     } else if (req.request_type === 'PG' && req.pg_id) {
       await supabase.from("pgs").update({ status: "DRAFT" }).eq("id", req.pg_id);
     }

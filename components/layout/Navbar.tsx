@@ -15,6 +15,7 @@ import {
   Calendar,
   Search,
   ChevronDown,
+  Repeat,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -40,8 +41,18 @@ const NAV_LINKS = [
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated, user, profile, signOut } = useAuth();
+  const { isAuthenticated, user, profile, isOwner, activeMode, setActiveMode, signOut } = useAuth();
   const pathname = usePathname();
+
+  const toggleMode = () => {
+    if (activeMode === 'user') {
+      setActiveMode('owner');
+      window.location.href = '/owner/dashboard';
+    } else {
+      setActiveMode('user');
+      window.location.href = '/dashboard';
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,14 +64,16 @@ export function Navbar() {
 
   return (
     <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled
-          ? "bg-white/95 dark:bg-card/95 backdrop-blur-xl border-b border-border shadow-sm py-3"
-          : "bg-transparent py-4"
-      )}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 pt-4 pb-2 pointer-events-none"
     >
-      <div className="container-custom flex items-center justify-between gap-4">
+      <div 
+        className={cn(
+          "container-custom flex items-center justify-between gap-4 transition-all duration-300 pointer-events-auto rounded-full",
+          isScrolled
+            ? "bg-white/90 dark:bg-card/90 backdrop-blur-xl border border-border/60 shadow-[0_8px_30px_rgb(0,0,0,0.08)] py-2.5 px-6"
+            : "bg-transparent py-3 px-4"
+        )}
+      >
 
         {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-2 group shrink-0" aria-label="PGBook Home">
@@ -102,25 +115,25 @@ export function Navbar() {
         <div className="flex items-center gap-2">
 
           {/* Role-based CTA (desktop) */}
-          {!profile || profile.role === 'USER' ? (
-            <Button asChild variant="ghost" className="hidden xl:flex font-semibold text-sm text-foreground hover:text-primary hover:bg-primary/8">
-              <Link href="/become-owner">
-                List Your PG
-              </Link>
-            </Button>
-          ) : profile.role === 'OWNER' ? (
-            <Button asChild variant="ghost" className="hidden xl:flex font-semibold text-sm text-foreground hover:text-primary hover:bg-primary/8">
-              <Link href="/owner/dashboard">
-                My PG Dashboard
-              </Link>
-            </Button>
-          ) : profile.role === 'ADMIN' ? (
+          {profile?.role === 'ADMIN' ? (
             <Button asChild variant="ghost" className="hidden xl:flex font-semibold text-sm text-foreground hover:text-primary hover:bg-primary/8">
               <Link href="/admin/dashboard">
                 Admin Dashboard
               </Link>
             </Button>
-          ) : null}
+          ) : isOwner ? (
+            <Button asChild variant="ghost" className="hidden xl:flex font-semibold text-sm text-foreground hover:text-primary hover:bg-primary/8">
+              <Link href="/owner/dashboard">
+                My PG Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild variant="ghost" className="hidden xl:flex font-semibold text-sm text-foreground hover:text-primary hover:bg-primary/8">
+              <Link href="/become-owner">
+                List Your PG
+              </Link>
+            </Button>
+          )}
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center gap-2">
@@ -157,11 +170,23 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href={profile?.role === 'OWNER' ? "/owner/dashboard" : profile?.role === 'ADMIN' ? "/admin/dashboard" : "/dashboard"} className="cursor-pointer flex items-center gap-2 py-2">
+                    <Link href={profile?.role === 'ADMIN' ? "/admin/dashboard" : isOwner && activeMode === 'owner' ? "/owner/dashboard" : "/dashboard"} className="cursor-pointer flex items-center gap-2 py-2">
                       <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                       <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
+                  
+                  {isOwner && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={toggleMode} className="cursor-pointer flex items-center gap-2 py-2">
+                        <Repeat className="h-4 w-4 text-muted-foreground" />
+                        <span>Switch to {activeMode === 'owner' ? 'User' : 'Owner'} View</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/favorites" className="cursor-pointer flex items-center gap-2 py-2">
                       <Heart className="h-4 w-4 text-muted-foreground" />
@@ -244,23 +269,7 @@ export function Navbar() {
                       {link.label}
                     </Link>
                   ))}
-                  {!profile || profile.role === 'USER' ? (
-                    <Link
-                      href="/become-owner"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-primary hover:bg-primary/8 transition-colors"
-                    >
-                      List Your PG
-                    </Link>
-                  ) : profile.role === 'OWNER' ? (
-                    <Link
-                      href="/owner/dashboard"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-primary hover:bg-primary/8 transition-colors"
-                    >
-                      My PG Dashboard
-                    </Link>
-                  ) : profile.role === 'ADMIN' ? (
+                  {profile?.role === 'ADMIN' ? (
                     <Link
                       href="/admin/dashboard"
                       onClick={() => setMobileOpen(false)}
@@ -268,7 +277,35 @@ export function Navbar() {
                     >
                       Admin Dashboard
                     </Link>
-                  ) : null}
+                  ) : isOwner ? (
+                    <Link
+                      href="/owner/dashboard"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-primary hover:bg-primary/8 transition-colors"
+                    >
+                      My PG Dashboard
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/become-owner"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-primary hover:bg-primary/8 transition-colors"
+                    >
+                      List Your PG
+                    </Link>
+                  )}
+                  {isOwner && (
+                    <button
+                      onClick={() => {
+                        toggleMode();
+                        setMobileOpen(false);
+                      }}
+                      className="flex items-center w-full px-4 py-3 rounded-xl text-base font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      <Repeat className="w-5 h-5 mr-3 text-muted-foreground" />
+                      Switch to {activeMode === 'owner' ? 'User' : 'Owner'} View
+                    </button>
+                  )}
                 </nav>
 
                 {/* Mobile Auth */}

@@ -12,6 +12,9 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   isEmailVerified: boolean;
+  isOwner: boolean;
+  activeMode: "user" | "owner";
+  setActiveMode: (mode: "user" | "owner") => void;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -22,6 +25,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [activeMode, setActiveModeState] = useState<"user" | "owner">("user");
   const [loading, setLoading] = useState(true);
 
   const supabase = createClient();
@@ -57,8 +62,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         const profileData = await fetchProfile(session.user.id);
         setProfile(profileData);
+        
+        const { data: ownerData } = await supabase
+          .from("owner_profiles")
+          .select("status")
+          .eq("user_id", session.user.id)
+          .single();
+          
+        if (ownerData?.status === "APPROVED") {
+          setIsOwner(true);
+        } else {
+          setIsOwner(false);
+        }
       } else {
         setProfile(null);
+        setIsOwner(false);
       }
     } catch (err) {
       console.error("Error fetching session:", err);
@@ -79,8 +97,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         const profileData = await fetchProfile(session.user.id);
         setProfile(profileData);
+        
+        const { data: ownerData } = await supabase
+          .from("owner_profiles")
+          .select("status")
+          .eq("user_id", session.user.id)
+          .single();
+          
+        if (ownerData?.status === "APPROVED") {
+          setIsOwner(true);
+        } else {
+          setIsOwner(false);
+        }
       } else {
         setProfile(null);
+        setIsOwner(false);
       }
       setLoading(false);
     });
@@ -104,6 +135,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isEmailVerified = !!user?.email_confirmed_at;
 
+  const setActiveMode = (mode: "user" | "owner") => {
+    setActiveModeState(mode);
+    document.cookie = `pgbook-mode=${mode}; path=/; max-age=31536000; SameSite=Lax`;
+  };
+
+  useEffect(() => {
+    // Read initial mode from cookie
+    const match = document.cookie.match(new RegExp('(^| )pgbook-mode=([^;]+)'));
+    if (match && (match[2] === "user" || match[2] === "owner")) {
+      setActiveModeState(match[2] as "user" | "owner");
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -113,6 +157,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         isAuthenticated: !!user,
         isEmailVerified,
+        isOwner,
+        activeMode,
+        setActiveMode,
         signOut,
         refreshProfile,
       }}
