@@ -88,7 +88,8 @@ export interface Database {
         Row: {
           id: string
           owner_id: string
-          pg_id: string
+          pg_id: string | null
+          request_type: "OWNER" | "PG" | null
           status: PgStatus
           admin_notes: string | null
           created_at: string
@@ -97,7 +98,8 @@ export interface Database {
         Insert: {
           id?: string
           owner_id: string
-          pg_id: string
+          pg_id?: string | null
+          request_type?: "OWNER" | "PG" | null
           status?: PgStatus
           admin_notes?: string | null
           created_at?: string
@@ -105,7 +107,8 @@ export interface Database {
         }
         Update: {
           owner_id?: string
-          pg_id?: string
+          pg_id?: string | null
+          request_type?: "OWNER" | "PG" | null
           status?: PgStatus
           admin_notes?: string | null
           resolved_at?: string | null

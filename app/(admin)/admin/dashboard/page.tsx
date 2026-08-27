@@ -7,15 +7,31 @@ export default async function AdminDashboard() {
   const supabase = await createClient();
 
   // Fetch approval requests
-  const { data: approvalRequests } = await supabase
+  const { data: rawApprovalRequests } = await supabase
     .from("approval_requests")
     .select(`
-      id, status, created_at,
+      id, status, created_at, request_type,
       profiles!owner_id ( full_name, phone, id_type, id_number, id_document_url, verification_status ),
       pgs!pg_id ( id, name, city_id, cities(name) )
     `)
     .eq("status", "PENDING")
     .order("created_at", { ascending: false });
+
+  // Generate signed URLs for private documents
+  const approvalRequests = await Promise.all((rawApprovalRequests || []).map(async (req: any) => {
+    let signedDocUrl = null;
+    if (req.profiles?.id_document_url) {
+      if (!req.profiles.id_document_url.startsWith('http')) {
+        const { data } = await supabase.storage.from('owner-documents').createSignedUrl(req.profiles.id_document_url, 60 * 60);
+        if (data?.signedUrl) {
+          signedDocUrl = data.signedUrl;
+        }
+      } else {
+        signedDocUrl = req.profiles.id_document_url; // Fallback for any old public URLs
+      }
+    }
+    return { ...req, signedDocUrl };
+  }));
 
   // Fetch active listings
   const { data: activeListings } = await supabase
@@ -108,12 +124,15 @@ export default async function AdminDashboard() {
                     <p className="text-xs text-muted-foreground">{req.profiles?.phone}</p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="font-bold text-foreground">{req.pgs?.name}</p>
-                    <p className="text-sm text-muted-foreground">{req.pgs?.cities?.name}</p>
+                    <p className="font-bold text-foreground">{req.pgs?.name || "N/A"}</p>
+                    <p className="text-sm text-muted-foreground">{req.pgs?.cities?.name || (req.request_type === 'OWNER' ? "Owner Verification Only" : "N/A")}</p>
+                    <span className="mt-1 inline-block text-[10px] uppercase font-bold bg-muted px-2 py-0.5 rounded text-muted-foreground">
+                      {req.request_type} REQUEST
+                    </span>
                   </td>
                   <td className="px-6 py-4">
-                    {req.profiles?.id_document_url ? (
-                      <a href={req.profiles.id_document_url} target="_blank" rel="noreferrer" className="text-primary text-xs font-bold hover:underline">
+                    {req.signedDocUrl ? (
+                      <a href={req.signedDocUrl} target="_blank" rel="noreferrer" className="text-primary text-xs font-bold hover:underline">
                         View Document
                       </a>
                     ) : (

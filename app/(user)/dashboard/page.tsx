@@ -23,7 +23,7 @@ export default async function UserDashboard() {
 
   // Fetch bookings (visits)
   const { data: bookings } = await supabase
-    .from("bookings")
+    .from("visit_bookings")
     .select("id, status")
     .eq("user_id", user?.id || "");
 

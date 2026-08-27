@@ -22,11 +22,11 @@ export async function updateOwnerVerification(formData: FormData) {
 
     if (idDocument) {
       const fileExt = idDocument.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `owner-documents/${fileName}`;
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('documents')
+        .from('owner-documents')
         .upload(filePath, idDocument);
 
       if (uploadError) {
@@ -34,11 +34,7 @@ export async function updateOwnerVerification(formData: FormData) {
         return { success: false, error: "Failed to upload document" };
       }
 
-      const { data: publicUrlData } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      idDocumentUrl = publicUrlData.publicUrl;
+      idDocumentUrl = filePath;
     }
 
     const updateData: any = {
@@ -62,6 +58,20 @@ export async function updateOwnerVerification(formData: FormData) {
     if (updateError) {
       console.error("Profile update error:", updateError);
       return { success: false, error: "Failed to save verification details" };
+    }
+
+    // Insert an approval request for the owner verification
+    const { error: requestError } = await supabase
+      .from('approval_requests')
+      .insert({
+        owner_id: user.id,
+        request_type: 'OWNER',
+        status: 'PENDING'
+      });
+      
+    if (requestError) {
+       console.error("Failed to create approval request:", requestError);
+       // We don't fail the whole function here, but we could
     }
 
     return { success: true };

@@ -72,7 +72,8 @@ export async function resolveApprovalRequest(requestId: string, approve: boolean
   const { data: adminProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (adminProfile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
 
-  const { data: req } = await supabase.from("approval_requests").select("*").eq("id", requestId).single();
+  const { data: rawReq } = await supabase.from("approval_requests").select("*").eq("id", requestId).single();
+  const req = rawReq as any;
   if (!req) return { success: false, error: "Request not found" };
 
   const newStatus = approve ? "APPROVED" : "REJECTED";
@@ -83,11 +84,17 @@ export async function resolveApprovalRequest(requestId: string, approve: boolean
   }).eq("id", requestId);
 
   if (approve) {
-    await supabase.from("profiles").update({ verification_status: "APPROVED", id_verified: true }).eq("id", req.owner_id);
-    await supabase.from("pgs").update({ status: "APPROVED", is_verified: true, verified_at: new Date().toISOString() }).eq("id", req.pg_id);
+    if (req.request_type === 'OWNER') {
+      await supabase.from("profiles").update({ verification_status: "APPROVED", id_verified: true }).eq("id", req.owner_id);
+    } else if (req.request_type === 'PG' && req.pg_id) {
+      await supabase.from("pgs").update({ status: "APPROVED", is_verified: true, verified_at: new Date().toISOString() }).eq("id", req.pg_id);
+    }
   } else {
-    await supabase.from("profiles").update({ verification_status: "REJECTED" }).eq("id", req.owner_id);
-    await supabase.from("pgs").update({ status: "DRAFT" }).eq("id", req.pg_id);
+    if (req.request_type === 'OWNER') {
+      await supabase.from("profiles").update({ verification_status: "REJECTED" }).eq("id", req.owner_id);
+    } else if (req.request_type === 'PG' && req.pg_id) {
+      await supabase.from("pgs").update({ status: "DRAFT" }).eq("id", req.pg_id);
+    }
   }
 
   revalidatePath("/admin/dashboard");

@@ -344,6 +344,7 @@ export async function submitForVerification(pgId: string) {
   const { error: reqError } = await supabase.from("approval_requests").insert({
     owner_id: user.id,
     pg_id: pgId,
+    request_type: "PG",
     status: "PENDING"
   });
 
