@@ -2,21 +2,11 @@ import type { Metadata } from "next";
 import { Hero } from "@/components/home/Hero";
 import { PopularCities } from "@/components/home/PopularCities";
 import { PopularPGs } from "@/components/home/PopularPGs";
-import { SuggestedPGs } from "@/components/home/SuggestedPGs";
-import { HighestRatedPGs } from "@/components/home/HighestRatedPGs";
-
-import { BrowseByRoomType } from "@/components/home/BrowseByRoomType";
-import { StudentPGs } from "@/components/home/StudentPGs";
-import { WorkingProfessionalPGs } from "@/components/home/WorkingProfessionalPGs";
-import { GenderAndCoLiving } from "@/components/home/GenderAndCoLiving";
-
-import { PopularLocalities } from "@/components/home/PopularLocalities";
 import { WhyPGBook } from "@/components/home/WhyChooseUs";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { TrustAndSafety } from "@/components/home/TrustAndSafety";
 import { BecomeOwner } from "@/components/home/BecomeOwner";
 import { FAQ } from "@/components/home/FAQ";
-import { SEOContent } from "@/components/home/SEOContent";
 import { createClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site";
 
@@ -63,30 +53,8 @@ export default async function HomePage() {
       {/* 2. Popular Cities */}
       <PopularCities />
 
-      {/* 17. Popular Localities */}
-      <PopularLocalities />
-
-
-      {/* 9. Browse By Room Type */}
-      <BrowseByRoomType />
-
-      {/* 12–14. Girls / Boys / Co-Living */}
-      <GenderAndCoLiving pgs={pgs || []} />
-
-      {/* 5. Popular PGs Carousel */}
+      {/* Current listings, shown once so thin inventory never repeats across empty categories. */}
       <PopularPGs pgs={pgs || []} />
-
-      {/* 7. Highest Rated PGs */}
-      <HighestRatedPGs pgs={pgs || []} />
-
-      {/* 6. Suggested PGs */}
-      <SuggestedPGs pgs={pgs || []} />
-
-      {/* 10. Student PGs */}
-      <StudentPGs pgs={pgs || []} />
-
-      {/* 11. Working Professional PGs */}
-      <WorkingProfessionalPGs pgs={pgs || []} />
 
       {/* 18. Why PGBook */}
       <WhyPGBook />
@@ -103,8 +71,6 @@ export default async function HomePage() {
       {/* 23. FAQ */}
       <FAQ />
 
-      {/* 24. SEO Content */}
-      <SEOContent />
     </div>
   );
 }

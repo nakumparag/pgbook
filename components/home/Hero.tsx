@@ -84,7 +84,7 @@ export function Hero() {
             {[
               { icon: "⌕", text: "Easy Search" },
               { icon: "★", text: "Guest Reviews" },
-              { icon: "⚡", text: "Direct Owner Contact" },
+              { icon: "⚡", text: "In-app Owner Inquiries" },
               { icon: "₹", text: "Zero Brokerage" },
             ].map((item) => (
               <div key={item.text} className="flex items-center gap-1.5 text-white/80 text-sm font-medium">

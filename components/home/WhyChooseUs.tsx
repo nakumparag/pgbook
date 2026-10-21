@@ -19,13 +19,13 @@ const BENEFITS = [
   {
     icon: SlidersHorizontal,
     title: "Transparent Info",
-    description: "See exact rent, deposit, amenities, house rules and room options — no hidden surprises.",
+    description: "Compare listed rent, available deposit details, amenities, house rules and room options.",
     color: "bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400",
   },
   {
     icon: Users,
     title: "Direct Owner Contact",
-    description: "Message or call the PG owner directly. No broker, no middleman, no commission.",
+    description: "Send an in-app inquiry to the owner. No broker, no middleman, no commission.",
     color: "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
   },
   {
