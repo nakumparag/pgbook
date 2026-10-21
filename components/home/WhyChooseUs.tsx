@@ -7,7 +7,7 @@ const BENEFITS = [
   {
     icon: Search,
     title: "Smart Search",
-    description: "Search by city, locality, college, workplace or landmark. Our filters help you narrow down exactly what you need.",
+    description: "Search by city, area or landmark. Filters help you narrow down the listings that fit.",
     color: "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
   },
   {
@@ -37,7 +37,7 @@ const BENEFITS = [
   {
     icon: MapPin,
     title: "Location Discovery",
-    description: "Browse by area, college proximity, or business hub. Find PGs exactly where you need to be.",
+    description: "Browse by city and area to find listings in places that work for you.",
     color: "bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400",
   },
 ];

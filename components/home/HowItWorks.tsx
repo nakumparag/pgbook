@@ -8,7 +8,7 @@ const STEPS = [
     number: "01",
     icon: Search,
     title: "Search",
-    description: "Enter your city, locality, college or workplace. Set your budget, room type and food preference.",
+    description: "Enter a city or area. Set your budget, room type and food preference.",
     color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/30",
   },

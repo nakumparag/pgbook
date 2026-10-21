@@ -108,11 +108,11 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-20">
             <div className="p-6">
               <h3 className="text-xl font-bold mb-2">Students</h3>
-              <p className="text-muted-foreground text-sm">Finding safe and comfortable environments near colleges.</p>
+              <p className="text-muted-foreground text-sm">Finding accommodation by location, budget, room type and amenities.</p>
             </div>
             <div className="p-6">
               <h3 className="text-xl font-bold mb-2">Professionals</h3>
-              <p className="text-muted-foreground text-sm">Convenient stays with great connectivity to workspaces.</p>
+              <p className="text-muted-foreground text-sm">Finding a place by location, rent and room details.</p>
             </div>
             <div className="p-6">
               <h3 className="text-xl font-bold mb-2">PG Owners</h3>

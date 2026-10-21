@@ -9,7 +9,6 @@ import { BrowseByRoomType } from "@/components/home/BrowseByRoomType";
 import { StudentPGs } from "@/components/home/StudentPGs";
 import { WorkingProfessionalPGs } from "@/components/home/WorkingProfessionalPGs";
 import { GenderAndCoLiving } from "@/components/home/GenderAndCoLiving";
-import { PGsNearColleges } from "@/components/home/PGsNearColleges";
 
 import { PopularLocalities } from "@/components/home/PopularLocalities";
 import { WhyPGBook } from "@/components/home/WhyChooseUs";
@@ -88,10 +87,6 @@ export default async function HomePage() {
 
       {/* 11. Working Professional PGs */}
       <WorkingProfessionalPGs pgs={pgs || []} />
-
-      {/* 15. PGs Near Colleges */}
-      <PGsNearColleges />
-
 
       {/* 18. Why PGBook */}
       <WhyPGBook />

@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Wifi, Utensils, BookOpen, CheckCircle, ArrowRight } from "lucide-react";
+import { SlidersHorizontal, Phone, Home, Star, ArrowRight } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 const STUDENT_FEATURES = [
-  { icon: Wifi, text: "High-Speed WiFi" },
-  { icon: Utensils, text: "Wholesome Meals" },
-  { icon: BookOpen, text: "Quiet Study Hours" },
-  { icon: CheckCircle, text: "Near Campuses" },
+  { icon: SlidersHorizontal, text: "Budget filters" },
+  { icon: Phone, text: "Direct owner contact" },
+  { icon: Home, text: "Room options" },
+  { icon: Star, text: "Guest reviews" },
 ];
 
 export function StudentPGs({ pgs = [] }: { pgs?: any[] }) {
@@ -38,7 +38,7 @@ export function StudentPGs({ pgs = [] }: { pgs?: any[] }) {
               <span className="text-primary">Student Life</span>
             </h2>
             <p className="section-subtext mb-6">
-              Affordable, safe, and study-friendly PGs near top colleges and universities across Gujarat. Focus on studies — we handle the rest.
+              Browse available listings and check each property&apos;s rent, amenities and location. Contact the owner to confirm details before visiting.
             </p>
 
             {/* Feature list */}

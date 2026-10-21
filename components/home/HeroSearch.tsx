@@ -11,15 +11,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const POPULAR_SEARCHES = [
-  "PG in Ahmedabad",
-  "PG in Sola",
-  "Girls PG in Ahmedabad",
-  "PG near Silver Oak University",
-  "PG under ₹7,000",
-  "PG in Thaltej",
-  "Boys PG in Surat",
-  "Co-Living Ahmedabad",
+const POPULAR_SEARCHES: Array<{ label: string; params: Record<string, string> }> = [
+  { label: "PG in Ahmedabad", params: { city: "ahmedabad" } },
+  { label: "PG in Sola", params: { city: "ahmedabad", area: "sola" } },
+  { label: "Girls PG in Ahmedabad", params: { city: "ahmedabad", gender: "girls" } },
+  { label: "PG under ₹7,000", params: { budget: "under-7000" } },
+  { label: "PG in Thaltej", params: { city: "ahmedabad", area: "thaltej" } },
+  { label: "Boys PG in Surat", params: { city: "surat", gender: "boys" } },
+  { label: "Co-Living Ahmedabad", params: { city: "ahmedabad", gender: "unisex" } },
 ];
 
 export function HeroSearch() {
@@ -32,15 +31,15 @@ export function HeroSearch() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (location) params.append("location", location);
+    if (location.trim()) params.set("location", location.trim());
     if (budget) params.append("budget", budget);
     if (roomType) params.append("roomType", roomType);
     if (food) params.append("food", food);
-    router.push(`/explore?${params.toString()}`);
+    router.push(params.size ? `/explore?${params.toString()}` : "/explore");
   };
 
-  const handleChipClick = (search: string) => {
-    router.push(`/explore?q=${encodeURIComponent(search)}`);
+  const handleChipClick = (search: (typeof POPULAR_SEARCHES)[number]) => {
+    router.push(`/explore?${new URLSearchParams(search.params).toString()}`);
   };
 
   return (
@@ -164,13 +163,13 @@ export function HeroSearch() {
         <div className="flex flex-wrap gap-2">
           {POPULAR_SEARCHES.slice(0, 5).map((search) => (
             <button
-              key={search}
+                  key={search.label}
               type="button"
               onClick={() => handleChipClick(search)}
               className="popular-chip text-foreground dark:text-foreground"
             >
               <Search className="w-3 h-3 text-primary" aria-hidden="true" />
-              {search}
+              {search.label}
             </button>
           ))}
         </div>

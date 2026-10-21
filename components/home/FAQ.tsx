@@ -26,11 +26,6 @@ const FAQS = [
       "Absolutely. Use the Gender filter on the explore page to filter for Girls PG, Boys PG, or Unisex PGs. You can also browse directly from the 'Girls PG' and 'Boys PG' sections on the homepage.",
   },
   {
-    question: "Can I search for PGs near my college?",
-    answer:
-      "Yes. Use the 'Find PGs Near Your College' section on the homepage to search by college name. You can also use the 'Looking Near' field in the hero search bar.",
-  },
-  {
     question: "Can I save PGs?",
     answer:
       "Use the heart icon on a property card to save it to your favorites list.",

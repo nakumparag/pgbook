@@ -45,6 +45,8 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
 
   // Read all URL params
   const cityQuery = (resolvedParams.city as string) || "";
+  const areaQuery = (resolvedParams.area as string) || "";
+  const locationQuery = (resolvedParams.location as string) || "";
   const urlGender = (resolvedParams.gender as string) || "";
   const urlBudget = (resolvedParams.budget as string) || "";
   const urlFood = (resolvedParams.food as string) || "";
@@ -56,7 +58,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
   const [view, setView] = useState<"grid" | "map">("grid");
   const [sort, setSort] = useState("recommended");
   const [sortOpen, setSortOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(cityQuery || urlQ);
+  const [searchQuery, setSearchQuery] = useState(locationQuery || areaQuery || cityQuery || urlQ);
   const [sidebarFilters, setSidebarFilters] = useState<ActiveFilters>({
     propertyTypes: [],
     genders: [],
@@ -65,7 +67,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
     maxRent: 50000,
     minRent: 3000,
     verifiedOnly: urlVerified,
-    location: cityQuery,
+    location: locationQuery || areaQuery || cityQuery,
   });
 
   useEffect(() => {
@@ -100,7 +102,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery) router.push(`/explore?city=${encodeURIComponent(searchQuery.toLowerCase())}`);
+    if (searchQuery.trim()) router.push(`/explore?location=${encodeURIComponent(searchQuery.trim())}`);
     else router.push("/explore");
   };
 
@@ -144,6 +146,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
     // Helper to get safe values from Supabase object
     const getCity = (pg: any) => pg.cities?.name?.toLowerCase() || "";
     const getArea = (pg: any) => pg.localities?.name?.toLowerCase() || pg.address?.toLowerCase() || "";
+    const normalizeLocation = (value: string) => value.toLowerCase().replace(/[\s_-]+/g, "");
     const getRentMin = (pg: any) => (pg.rooms && pg.rooms.length > 0) ? Math.min(...pg.rooms.map((r: any) => r.rent)) : (pg.monthly_rent_from || 0);
     const getRentMax = (pg: any) => (pg.rooms && pg.rooms.length > 0) ? Math.max(...pg.rooms.map((r: any) => r.rent)) : (pg.monthly_rent_to || pg.monthly_rent_from || 0);
     const getFlatAmenities = (pg: any) => (pg.pg_amenities || []).map((pa: any) => pa.amenities?.name?.toLowerCase() || "");
@@ -152,7 +155,15 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
       results = results.filter((pg) => getCity(pg).includes(cityQuery.toLowerCase()));
     }
 
-    if (sidebarFilters.location && !cityQuery) {
+    if (areaQuery) {
+      const area = normalizeLocation(areaQuery);
+      results = results.filter((pg) => normalizeLocation(getArea(pg)).includes(area));
+    }
+
+    if (locationQuery && !cityQuery && !areaQuery) {
+      const loc = locationQuery.toLowerCase();
+      results = results.filter((pg) => getCity(pg).includes(loc) || getArea(pg).includes(loc));
+    } else if (sidebarFilters.location && !cityQuery && !areaQuery && !locationQuery) {
       const loc = sidebarFilters.location.toLowerCase();
       results = results.filter((pg) => getCity(pg).includes(loc) || getArea(pg).includes(loc));
     }
@@ -205,10 +216,11 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
       );
     }
 
-    if (urlFood === "included") {
-      results = results.filter((pg) =>
-        getFlatAmenities(pg).some((a: string) => a.includes("meal") || a.includes("food"))
-      );
+    if (urlFood === "included" || urlFood === "available" || urlFood === "none") {
+      results = results.filter((pg) => {
+        const hasFood = getFlatAmenities(pg).some((a: string) => a.includes("meal") || a.includes("food"));
+        return urlFood === "none" ? !hasFood : hasFood;
+      });
     }
 
     if (urlRoomType) {
@@ -219,7 +231,10 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
       };
       const roomKeywords = rtMap[urlRoomType] || [urlRoomType];
       results = results.filter((pg) =>
-        pg.rooms?.some((room: any) => roomKeywords.some((k) => room.room_type?.toLowerCase().includes(k.toLowerCase())))
+        pg.rooms?.some((room: any) => {
+          const normalizedType = normalizeLocation(room.room_type || "");
+          return roomKeywords.some((keyword) => normalizedType.includes(normalizeLocation(keyword)));
+        })
       );
     }
 
@@ -248,7 +263,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
 
     return results;
   }, [
-    cityQuery, urlBudget, urlGender, urlFood, urlRoomType, urlVerified, urlAmenity, urlQ, sidebarFilters, realListings
+    cityQuery, areaQuery, locationQuery, urlBudget, urlGender, urlFood, urlRoomType, urlVerified, urlAmenity, urlQ, sidebarFilters, realListings
   ]);
 
   const sortedListings = useMemo(() => {
@@ -266,7 +281,9 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
   if (urlGender === "girls") headingParts.push("Girls");
   else if (urlGender === "boys") headingParts.push("Boys");
   headingParts.push("PGs");
-  if (cityQuery) headingParts.push(`in ${cityQuery.charAt(0).toUpperCase() + cityQuery.slice(1)}`);
+  if (areaQuery) headingParts.push(`in ${areaQuery.replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase())}`);
+  else if (cityQuery) headingParts.push(`in ${cityQuery.charAt(0).toUpperCase() + cityQuery.slice(1)}`);
+  else if (locationQuery) headingParts.push(`near ${locationQuery}`);
   else headingParts.push("Across Gujarat");
   const heading = headingParts.join(" ");
 
@@ -279,7 +296,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
               <Search className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
               <input
                 type="text"
-                placeholder="Search city, area or locality..."
+                placeholder="Search city, area or landmark..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground flex-1"
@@ -327,7 +344,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
         <aside className="w-full lg:w-72 shrink-0" aria-label="Search filters">
           <SearchFilters
             onFilterChange={handleFilterChange}
-            initialLocation={cityQuery}
+            initialLocation={locationQuery || areaQuery || cityQuery}
           />
         </aside>
 
