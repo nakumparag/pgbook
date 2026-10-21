@@ -32,15 +32,16 @@ export function ContactOwnerModal({
 
   const handleWhatsApp = async () => {
     if (!whatsappNumber) return;
-    await logContactClick(pgId, ownerId, "WHATSAPP");
+    const phone = whatsappNumber.replace(/\D/g, "");
     const message = `Hi, I am interested in ${pgName} in ${locality}. I would like to know more about availability and visit options.`;
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank");
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    void logContactClick(pgId, ownerId, "WHATSAPP").catch((err) => console.error("Contact click log failed:", err));
   };
 
   const handleCall = async () => {
     if (!contactPhone) return;
-    await logContactClick(pgId, ownerId, "CALL");
-    window.location.href = `tel:${contactPhone}`;
+    window.location.assign(`tel:${contactPhone}`);
+    void logContactClick(pgId, ownerId, "CALL").catch((err) => console.error("Contact click log failed:", err));
   };
 
   const handleCallbackSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

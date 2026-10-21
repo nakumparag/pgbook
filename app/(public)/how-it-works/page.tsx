@@ -60,7 +60,7 @@ export default function HowItWorksPage() {
               </div>
               <h3 className="text-xl font-bold mb-3">Visit</h3>
               <p className="text-muted-foreground text-sm">
-                Book a visit directly through the platform or contact the PG owner to see the property in person.
+                Contact the PG owner by WhatsApp or phone to ask questions and arrange a visit.
               </p>
               <div className="mt-6 text-primary flex justify-center">
                 <Map className="w-8 h-8 opacity-50" />
@@ -145,7 +145,7 @@ export default function HowItWorksPage() {
               </div>
               <h3 className="text-xl font-bold mb-3">Connect</h3>
               <p className="text-muted-foreground text-sm">
-                Receive booking requests and direct inquiries from interested tenants via your dashboard.
+                Receive direct inquiries from interested tenants by phone or WhatsApp.
               </p>
               <div className="mt-6 text-accent flex justify-center">
                 <MessageSquare className="w-8 h-8 opacity-50" />

@@ -54,12 +54,12 @@ const faqs = [
         a: "Yes, authenticated users can click the heart icon on any PG card to save it to their 'Favorites' for easy access later."
       },
       {
-        q: "How can I book a visit?",
-        a: "On a PG's details page, you can select an available date and time to schedule a visit. The owner will receive your request and confirm."
+        q: "How do I arrange a visit?",
+        a: "Open a PG listing and contact the owner by WhatsApp or phone to ask questions and arrange a visit directly."
       },
       {
         q: "How do I contact an owner?",
-        a: "Once you schedule a visit or if the owner has enabled direct contact, their phone number and email will be visible to logged-in users."
+        a: "Open the PG listing and choose Contact Owner to reach them by WhatsApp or phone."
       }
     ]
   },

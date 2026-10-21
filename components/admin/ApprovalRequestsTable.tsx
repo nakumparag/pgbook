@@ -12,12 +12,15 @@ export default function ApprovalRequestsTable({ requests }: { requests: any[] })
   const [rejectDialog, setRejectDialog] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [approveDialog, setApproveDialog] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const handleApprove = async () => {
     if (!approveDialog) return;
     setProcessing(approveDialog);
+    setActionError(null);
     try {
-      await resolveApprovalRequest(approveDialog, true, "Approved by Admin");
+      const result = await resolveApprovalRequest(approveDialog, true, "Approved by Admin");
+      if (!result.success) setActionError(result.error || "Could not approve this request.");
     } finally {
       setProcessing(null);
       setApproveDialog(null);
@@ -27,8 +30,10 @@ export default function ApprovalRequestsTable({ requests }: { requests: any[] })
   const handleReject = async () => {
     if (!rejectDialog || !rejectReason.trim()) return;
     setProcessing(rejectDialog);
+    setActionError(null);
     try {
-      await resolveApprovalRequest(rejectDialog, false, rejectReason);
+      const result = await resolveApprovalRequest(rejectDialog, false, rejectReason);
+      if (!result.success) setActionError(result.error || "Could not reject this request.");
     } finally {
       setProcessing(null);
       setRejectDialog(null);
@@ -41,7 +46,8 @@ export default function ApprovalRequestsTable({ requests }: { requests: any[] })
       <div className="p-6 border-b border-border/50 bg-muted/20">
         <h2 className="text-2xl font-heading font-bold text-foreground">Pending Approval Requests</h2>
       </div>
-      <div className="overflow-x-auto">
+      {actionError && <p role="alert" className="mx-6 mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">{actionError}</p>}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/50 text-muted-foreground font-semibold uppercase text-xs tracking-wider">
             <tr>
@@ -108,6 +114,32 @@ export default function ApprovalRequestsTable({ requests }: { requests: any[] })
             )}
           </tbody>
         </table>
+      </div>
+      <div className="divide-y divide-border md:hidden">
+        {(requests || []).map((req: any) => (
+          <article key={req.id} className="space-y-3 p-4">
+            <div>
+              <p className="font-bold text-foreground">{req.profiles?.full_name || "Unknown owner"}</p>
+              <p className="text-sm text-muted-foreground">{req.profiles?.phone || "No phone number"}</p>
+            </div>
+            <div className="rounded-xl bg-muted/40 p-3 text-sm">
+              <p className="font-semibold text-foreground">{req.pgs?.name || "Owner verification"}</p>
+              <p className="text-muted-foreground">{req.pgs?.cities?.name || "Owner verification only"}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{req.request_type} request{req.ownerProfile?.id_type ? ` · ${req.ownerProfile.id_type}` : ""}</p>
+              {req.ownerProfile?.id_number && <p className="text-xs text-muted-foreground">ID: {req.ownerProfile.id_number}</p>}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              {req.signedDocUrl ? (
+                <a href={req.signedDocUrl} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary hover:underline">View document</a>
+              ) : <span className="text-xs text-muted-foreground">No document</span>}
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-success text-white" onClick={() => setApproveDialog(req.id)} disabled={processing === req.id}>Approve</Button>
+                <Button size="sm" variant="destructive" onClick={() => setRejectDialog(req.id)} disabled={processing === req.id}>Reject</Button>
+              </div>
+            </div>
+          </article>
+        ))}
+        {(!requests || requests.length === 0) && <p className="p-6 text-center text-sm text-muted-foreground">No pending approval requests.</p>}
       </div>
 
       {/* Approve Dialog */}

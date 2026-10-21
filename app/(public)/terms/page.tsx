@@ -38,7 +38,7 @@ export default function TermsPage() {
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">6. Listing Verification</h2>
           <p>
-            While PGBook attempts to verify listings for authenticity, we cannot be held liable for any discrepancies or issues that arise post-booking. Users are advised to visit the property in person before making financial commitments.
+            While PGBook attempts to verify listings for authenticity, we cannot be held liable for discrepancies or issues. Users should verify a property in person before making financial commitments.
           </p>
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">7. Third Party Services & Intellectual Property</h2>

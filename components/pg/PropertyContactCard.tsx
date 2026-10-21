@@ -1,10 +1,9 @@
 "use client";
 
-import { ShieldCheck, Users } from "lucide-react";
-import { BookingModal } from "./BookingModal";
+import { ShieldCheck } from "lucide-react";
 import { ContactOwnerModal } from "./ContactOwnerModal";
 
-export function BookingCard({ pg }: { pg: any }) {
+export function PropertyContactCard({ pg }: { pg: any }) {
   const rentMin = pg.rooms?.length > 0 ? Math.min(...pg.rooms.map((r: any) => r.rent)) : 0;
   const rentMax = pg.rooms?.length > 0 ? Math.max(...pg.rooms.map((r: any) => r.rent)) : 0;
 
@@ -40,7 +39,6 @@ export function BookingCard({ pg }: { pg: any }) {
         </div>
       </div>
 
-      <BookingModal pgName={pg.name} />
       <ContactOwnerModal 
         pgId={pg.id}
         ownerId={pg.owner_id}
@@ -50,9 +48,6 @@ export function BookingCard({ pg }: { pg: any }) {
         locality={(pg.localities as any)?.name || ""}
       />
 
-      <p className="text-center text-xs text-muted-foreground mt-4 font-medium">
-        You won&apos;t be charged yet
-      </p>
     </div>
   );
 }

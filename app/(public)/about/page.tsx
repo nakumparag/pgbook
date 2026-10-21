@@ -87,7 +87,7 @@ export default function AboutPage() {
               "Room sharing options",
               "Food / Non-Food filtering",
               "Location-based discovery",
-              "Owner listings & Visit booking",
+              "Owner listings & direct contact",
               "Reviews and ratings",
               "Trusted & Transparent Information",
               "User Friendly Experience",

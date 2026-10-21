@@ -12,7 +12,6 @@ import {
   LogOut,
   LayoutDashboard,
   Heart,
-  Calendar,
   Search,
   ChevronDown,
   Repeat,
@@ -193,12 +192,6 @@ export function Navbar() {
                       <span>Saved PGs</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/bookings" className="cursor-pointer flex items-center gap-2 py-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>My Bookings</span>
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={signOut}
@@ -325,11 +318,6 @@ export function Navbar() {
                         <Link href="/favorites" onClick={() => setMobileOpen(false)}>
                           <Button variant="outline" className="w-full rounded-xl text-sm" size="sm">
                             <Heart className="mr-1.5 h-4 w-4" /> Saved
-                          </Button>
-                        </Link>
-                        <Link href="/bookings" onClick={() => setMobileOpen(false)}>
-                          <Button variant="outline" className="w-full rounded-xl text-sm" size="sm">
-                            <Calendar className="mr-1.5 h-4 w-4" /> Bookings
                           </Button>
                         </Link>
                       </div>

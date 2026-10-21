@@ -83,31 +83,42 @@ export async function resolveApprovalRequest(requestId: string, approve: boolean
     if (adminProfile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
   }
 
-  const { data: rawReq } = await supabase.from("approval_requests").select("*").eq("id", requestId).single();
+  const { data: rawReq, error: requestError } = await supabase.from("approval_requests").select("*").eq("id", requestId).single();
   const req = rawReq as any;
-  if (!req) return { success: false, error: "Request not found" };
+  if (requestError || !req) return { success: false, error: "Request not found" };
+  if (req.status !== "PENDING") return { success: false, error: "This request has already been reviewed. Refresh the page." };
 
   const newStatus = approve ? "APPROVED" : "REJECTED";
-  await supabase.from("approval_requests").update({
-    status: newStatus,
-    admin_notes: notes,
-    resolved_at: new Date().toISOString()
-  }).eq("id", requestId);
-
   if (approve) {
     if (req.request_type === 'OWNER') {
-      await supabase.from("owner_profiles").update({ status: "APPROVED" }).eq("user_id", req.owner_id);
-      await supabase.from("profiles").update({ id_verified: true }).eq("id", req.owner_id);
+      const { error: ownerError } = await supabase.from("owner_profiles").update({ status: "APPROVED" }).eq("user_id", req.owner_id);
+      if (ownerError) return { success: false, error: "Could not approve the owner. Please retry." };
+      const { error: profileError } = await supabase.from("profiles").update({ id_verified: true }).eq("id", req.owner_id);
+      if (profileError) return { success: false, error: "Owner approval was saved, but ID verification did not update. Please retry." };
     } else if (req.request_type === 'PG' && req.pg_id) {
-      await supabase.from("pgs").update({ status: "APPROVED", is_verified: true, verified_at: new Date().toISOString() }).eq("id", req.pg_id);
+      const { error: pgError } = await supabase.from("pgs").update({ status: "APPROVED", is_verified: true, verified_at: new Date().toISOString() }).eq("id", req.pg_id);
+      if (pgError) return { success: false, error: "Could not approve this PG. Please retry." };
+    } else {
+      return { success: false, error: "This request is missing its owner or PG record." };
     }
   } else {
     if (req.request_type === 'OWNER') {
-      await supabase.from("owner_profiles").update({ status: "REJECTED" }).eq("user_id", req.owner_id);
+      const { error: ownerError } = await supabase.from("owner_profiles").update({ status: "REJECTED" }).eq("user_id", req.owner_id);
+      if (ownerError) return { success: false, error: "Could not reject the owner request. Please retry." };
     } else if (req.request_type === 'PG' && req.pg_id) {
-      await supabase.from("pgs").update({ status: "DRAFT" }).eq("id", req.pg_id);
+      const { error: pgError } = await supabase.from("pgs").update({ status: "DRAFT" }).eq("id", req.pg_id);
+      if (pgError) return { success: false, error: "Could not return this PG to draft. Please retry." };
+    } else {
+      return { success: false, error: "This request is missing its owner or PG record." };
     }
   }
+
+  const { error: approvalError } = await supabase.from("approval_requests").update({
+    status: newStatus,
+    admin_notes: notes,
+    resolved_at: new Date().toISOString()
+  }).eq("id", requestId).eq("status", "PENDING");
+  if (approvalError) return { success: false, error: "The listing changed, but the request status could not be saved. Refresh and review it." };
 
   revalidatePath("/admin/dashboard");
   return { success: true };

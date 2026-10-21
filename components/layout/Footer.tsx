@@ -16,7 +16,6 @@ const FOOTER_LINKS = {
   users: [
     { label: "Saved PGs", href: "/favorites" },
     { label: "Compare PGs", href: "/compare" },
-    { label: "My Bookings", href: "/bookings" },
     { label: "Safety Guide", href: "/safety" },
     { label: "PG Guides", href: "/guides" },
   ],

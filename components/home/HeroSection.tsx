@@ -76,12 +76,12 @@ export function HeroSection() {
             <div className="w-1 h-1 rounded-full bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
               <span style={{ fontFamily: "'Material Symbols Rounded'", fontSize: "20px", lineHeight: 1, fontVariationSettings: "'FILL' 1" }} className="text-indigo-500">location_city</span>
-              <span>8+ Top Cities</span>
+              <span>Popular Cities</span>
             </div>
             <div className="w-1 h-1 rounded-full bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
               <span style={{ fontFamily: "'Material Symbols Rounded'", fontSize: "20px", lineHeight: 1, fontVariationSettings: "'FILL' 1" }} className="text-amber-500">bolt</span>
-              <span>Instant Booking</span>
+              <span>Direct Owner Contact</span>
             </div>
             <div className="w-1 h-1 rounded-full bg-border hidden sm:block" />
             <div className="flex items-center gap-2">

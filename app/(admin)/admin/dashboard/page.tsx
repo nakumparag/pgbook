@@ -47,10 +47,10 @@ export default async function AdminDashboard() {
     .limit(20);
 
   // Quick stats queries
-  const [{ count: totalPGs }, { count: totalUsers }, { count: pendingCount }] = await Promise.all([
+  const [{ count: totalPGs }, { count: totalUsers }, { count: totalOwners }] = await Promise.all([
     supabase.from("pgs").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("pgs").select("*", { count: "exact", head: true }).eq("status", "PENDING")
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "OWNER")
   ]);
 
   return (
@@ -99,7 +99,7 @@ export default async function AdminDashboard() {
             </div>
             <p className="text-sm text-muted-foreground font-semibold">Total Owners</p>
           </div>
-          <p className="text-3xl font-heading font-black mt-2 text-foreground">--</p>
+          <p className="text-3xl font-heading font-black mt-2 text-foreground">{totalOwners || 0}</p>
         </div>
       </div>
 
@@ -109,7 +109,7 @@ export default async function AdminDashboard() {
         <div className="p-6 border-b border-border/50 bg-muted/20 flex items-center justify-between">
           <h2 className="text-2xl font-heading font-bold text-foreground">Active PGs (Management)</h2>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="bg-muted/50 text-muted-foreground font-semibold uppercase text-xs tracking-wider">
               <tr>
@@ -161,6 +161,23 @@ export default async function AdminDashboard() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="divide-y divide-border md:hidden">
+          {(activeListings || []).map((pg: any) => (
+            <article key={pg.id} className="space-y-3 p-4">
+              <div>
+                <p className="font-bold text-foreground">{pg.name}</p>
+                <p className="text-sm text-muted-foreground">{pg.profiles?.full_name || "Unknown owner"}{pg.profiles?.id_verified ? " · Owner ID verified" : ""}</p>
+              </div>
+              <p className="text-xs font-bold">{pg.is_verified ? "Verified property" : "Unverified property"}</p>
+              <div className="flex flex-wrap gap-2">
+                {!pg.profiles?.id_verified && <form action={async () => { "use server"; await verifyOwnerId(pg.owner_id, true); }}><Button type="submit" size="sm" variant="outline" className="border-primary text-primary">Verify owner</Button></form>}
+                {!pg.is_verified && <form action={async () => { "use server"; await verifyProperty(pg.id, true); }}><Button type="submit" size="sm" variant="outline" className="border-success text-success">Verify property</Button></form>}
+                <form action={async () => { "use server"; await updatePgStatus(pg.id, "ARCHIVED"); }}><Button type="submit" size="sm" variant="destructive">Remove listing</Button></form>
+              </div>
+            </article>
+          ))}
+          {(!activeListings || activeListings.length === 0) && <p className="p-6 text-center text-sm text-muted-foreground">No active listings.</p>}
         </div>
       </div>
     </div>

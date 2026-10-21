@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { MapPin, ShieldCheck, Share2, Heart, Check, Users } from "lucide-react";
 import { PGGallery } from "@/components/pg/PGGallery";
-import { BookingCard } from "@/components/pg/BookingCard";
+import { PropertyContactCard } from "@/components/pg/PropertyContactCard";
 import { ReviewSection } from "@/components/pg/ReviewSection";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -378,7 +378,7 @@ export default async function PGDetail({ params }: PGDetailProps) {
 
         {/* Sticky Sidebar */}
         <div className="w-full lg:w-96 shrink-0 mt-8 lg:mt-0">
-          <BookingCard pg={pg as any} />
+          <PropertyContactCard pg={pg as any} />
         </div>
       </div>
     </div>

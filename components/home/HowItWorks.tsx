@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, Phone, Home } from "lucide-react";
+import { Search, SlidersHorizontal, Phone } from "lucide-react";
 import { motion } from "framer-motion";
 
 const STEPS = [
@@ -23,18 +23,10 @@ const STEPS = [
   {
     number: "03",
     icon: Phone,
-    title: "Contact & Visit",
-    description: "Reach out to the owner directly. Schedule a visit and see the property in person before deciding.",
+    title: "Contact the Owner",
+    description: "Ask questions directly by WhatsApp or phone and arrange a visit with the owner.",
     color: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/30",
-  },
-  {
-    number: "04",
-    icon: Home,
-    title: "Choose Your PG",
-    description: "Found the right fit? Confirm your booking and move in. Welcome home.",
-    color: "text-green-600 dark:text-green-400",
-    bg: "bg-green-50 dark:bg-green-950/30",
   },
 ];
 
@@ -49,12 +41,12 @@ export function HowItWorks() {
             How PGBook Works
           </h2>
           <p className="section-subtext">
-            From search to move-in — in 4 simple steps.
+            Search, compare, and contact the owner directly.
           </p>
         </div>
 
         {/* Steps Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative">
 
           {/* Connecting line (desktop only) */}
           <div
