@@ -2,6 +2,7 @@ import { Building2, Users, AlertTriangle, ShieldCheck, XCircle } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { updatePgStatus, verifyOwnerId, verifyProperty, resolveApprovalRequest } from "@/app/actions/admin";
+import ApprovalRequestsTable from "@/components/admin/ApprovalRequestsTable";
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
@@ -102,71 +103,7 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden mb-12">
-        <div className="p-6 border-b border-border/50 bg-muted/20">
-          <h2 className="text-2xl font-heading font-bold text-foreground">Pending Approval Requests</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted/50 text-muted-foreground font-semibold uppercase text-xs tracking-wider">
-              <tr>
-                <th className="px-6 py-4">Owner & ID</th>
-                <th className="px-6 py-4">PG Name & Location</th>
-                <th className="px-6 py-4">Document</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {(approvalRequests || []).map((req: any) => (
-                <tr key={req.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <p className="font-bold text-foreground text-base">{req.profiles?.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{req.ownerProfile?.id_type}: {req.ownerProfile?.id_number}</p>
-                    <p className="text-xs text-muted-foreground">{req.profiles?.phone}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-bold text-foreground">{req.pgs?.name || "N/A"}</p>
-                    <p className="text-sm text-muted-foreground">{req.pgs?.cities?.name || (req.request_type === 'OWNER' ? "Owner Verification Only" : "N/A")}</p>
-                    <span className="mt-1 inline-block text-[10px] uppercase font-bold bg-muted px-2 py-0.5 rounded text-muted-foreground">
-                      {req.request_type} REQUEST
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {req.signedDocUrl ? (
-                      <a href={req.signedDocUrl} target="_blank" rel="noreferrer" className="text-primary text-xs font-bold hover:underline">
-                        View Document
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">No Doc</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <form action={async () => { "use server"; await resolveApprovalRequest(req.id, true, "Approved"); }}>
-                        <Button type="submit" size="sm" className="bg-success text-white hover:bg-success/90 rounded-lg shadow-sm">
-                          <ShieldCheck className="w-4 h-4 mr-1.5" /> Approve
-                        </Button>
-                      </form>
-                      <form action={async () => { "use server"; await resolveApprovalRequest(req.id, false, "Rejected"); }}>
-                        <Button type="submit" size="sm" variant="destructive" className="rounded-lg shadow-sm">
-                          <XCircle className="w-4 h-4 mr-1.5" /> Reject
-                        </Button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {(!approvalRequests || approvalRequests.length === 0) && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
-                    No pending approval requests.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ApprovalRequestsTable requests={approvalRequests} />
 
       <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
         <div className="p-6 border-b border-border/50 bg-muted/20 flex items-center justify-between">

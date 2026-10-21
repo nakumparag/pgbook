@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User as AuthUser, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/types/database.types";
+import type { Profile, UserRole } from "@/types/database.types";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -31,20 +31,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const supabase = createClient();
 
-  const fetchProfile = async (userId: string): Promise<Profile | null> => {
+  const fetchProfile = async (userId: string, userMeta?: any): Promise<Profile | null> => {
     try {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile:", error.message);
         return null;
       }
 
-      return data as Profile;
+      if (!data && userMeta) {
+        // Safe profile creation fallback if trigger was delayed or missing
+        const { data: newProfile } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              id: userId,
+              full_name: userMeta.full_name || null,
+              avatar_url: userMeta.avatar_url || null,
+              role: (userMeta.role === "ADMIN" ? "ADMIN" : userMeta.role === "OWNER" ? "OWNER" : "USER") as UserRole,
+              phone: userMeta.phone || null,
+            },
+            { onConflict: "id" }
+          )
+          .select()
+          .maybeSingle();
+
+        return (newProfile as Profile) || null;
+      }
+
+      return (data as Profile) || null;
     } catch (err) {
       console.error("Exception fetching profile:", err);
       return null;
@@ -60,14 +80,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        const profileData = await fetchProfile(session.user.id);
+        const profileData = await fetchProfile(session.user.id, session.user.user_metadata);
         setProfile(profileData);
         
         const { data: ownerData } = await supabase
           .from("owner_profiles")
           .select("status")
           .eq("user_id", session.user.id)
-          .single();
+          .maybeSingle();
           
         if (ownerData?.status === "APPROVED") {
           setIsOwner(true);
@@ -95,14 +115,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        const profileData = await fetchProfile(session.user.id);
+        const profileData = await fetchProfile(session.user.id, session.user.user_metadata);
         setProfile(profileData);
         
         const { data: ownerData } = await supabase
           .from("owner_profiles")
           .select("status")
           .eq("user_id", session.user.id)
-          .single();
+          .maybeSingle();
           
         if (ownerData?.status === "APPROVED") {
           setIsOwner(true);
@@ -123,12 +143,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Error signing out:", err);
+    } finally {
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      setIsOwner(false);
+      window.location.href = "/login";
+    }
   };
 
   const refreshProfile = async () => {
     if (user) {
-      const profileData = await fetchProfile(user.id);
+      const profileData = await fetchProfile(user.id, user.user_metadata);
       setProfile(profileData);
     }
   };

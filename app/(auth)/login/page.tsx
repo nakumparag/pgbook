@@ -1,26 +1,63 @@
 "use client";
 
 import Link from "next/link";
-import { useState, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { Home, Mail, Lock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getAppUrl } from "@/lib/utils";
 
 function LoginContent() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isSubmittingRef = useRef(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextParam = searchParams.get('next') || searchParams.get('redirect');
+  const urlError = searchParams.get('error');
   const supabase = createClient();
+
+  // Strip any accidental email or password query parameters immediately on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search) {
+      const url = new URL(window.location.href);
+      let changed = false;
+      if (url.searchParams.has("password")) {
+        url.searchParams.delete("password");
+        changed = true;
+      }
+      if (url.searchParams.has("email")) {
+        url.searchParams.delete("email");
+        changed = true;
+      }
+      if (changed) {
+        const cleanQuery = url.searchParams.toString();
+        const cleanPath = url.pathname + (cleanQuery ? `?${cleanQuery}` : "");
+        window.history.replaceState({}, "", cleanPath);
+      }
+    }
+  }, []);
+
+  // Display friendly error if redirected from auth callback or protected route
+  useEffect(() => {
+    if (urlError === 'auth_callback_failed') {
+      setError("Authentication failed or link expired. Please sign in again.");
+    } else if (urlError === 'access_denied') {
+      setError("You do not have permission to access that page.");
+    } else if (urlError === 'verification_failed') {
+      setError("Email verification failed or expired. Please sign in or request a new link.");
+    }
+  }, [urlError]);
 
   // Ensure the redirect URL is relative to prevent Open Redirect vulnerabilities
   const getSafeRedirectUrl = () => {
-    if (nextParam && nextParam.startsWith('/')) {
+    if (nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')) {
       return nextParam;
     }
     return '/dashboard';
@@ -28,47 +65,71 @@ function LoginContent() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    setIsLoading(false);
-
-    if (signInError) {
-      if (signInError.message.includes("Email not confirmed")) {
-        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
-      } else if (signInError.message.includes("Invalid login credentials")) {
-        setError("Invalid email or password");
-      } else {
-        setError(signInError.message);
-      }
+    if (isSubmittingRef.current || isLoading || isGoogleLoading) {
       return;
     }
 
-    router.push(getSafeRedirectUrl());
-    router.refresh();
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: password,
+      });
+
+      if (signInError) {
+        const msg = signInError.message.toLowerCase();
+        if (msg.includes("email not confirmed")) {
+          router.replace(`/verify-email?email=${encodeURIComponent(trimmedEmail)}`);
+        } else if (msg.includes("invalid login credentials") || msg.includes("invalid credentials")) {
+          setError("Invalid email or password.");
+        } else {
+          setError(signInError.message || "Failed to sign in. Please try again.");
+        }
+        return;
+      }
+
+      // Clear sensitive password from memory
+      setPassword("");
+
+      // Safe redirect without query credentials
+      const targetUrl = getSafeRedirectUrl();
+      router.replace(targetUrl);
+      router.refresh();
+    } catch {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+      isSubmittingRef.current = false;
+    }
   };
 
   const handleGoogleLogin = async () => {
+    if (isLoading || isGoogleLoading) return;
     setIsGoogleLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(getSafeRedirectUrl())}`,
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${getAppUrl()}/auth/callback?next=${encodeURIComponent(getSafeRedirectUrl())}`,
+        }
+      });
+      
+      if (error) {
+        setError(error.message);
+        setIsGoogleLoading(false);
       }
-    });
-    
-    if (error) {
-      setError(error.message);
+    } catch {
+      setError("Failed to initiate Google sign-in. Please try again.");
       setIsGoogleLoading(false);
     }
   };
@@ -97,7 +158,7 @@ function LoginContent() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} method="POST" action="#" className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground ml-1">Email address</label>
               <div className="relative">
@@ -105,7 +166,10 @@ function LoginContent() {
                 <Input 
                   type="email" 
                   name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required 
+                  autoComplete="email"
                   className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                   placeholder="name@example.com"
                 />
@@ -124,7 +188,10 @@ function LoginContent() {
                 <Input 
                   type="password" 
                   name="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required 
+                  autoComplete="current-password"
                   className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                   placeholder="••••••••"
                 />

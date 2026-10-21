@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { Mail, ArrowRight, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getAppUrl } from "@/lib/utils";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -13,33 +14,64 @@ function VerifyEmailContent() {
   const email = searchParams.get("email");
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  const isSubmittingRef = useRef(false);
   const supabase = createClient();
 
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
   const handleResend = async () => {
+    if (isSubmittingRef.current || isLoading || cooldown > 0) return;
+
     if (!email) {
       setMessage({ text: "No email address found. Please try signing up again.", type: 'error' });
       return;
     }
 
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setMessage(null);
 
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email: email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${getAppUrl()}/auth/callback`,
+        }
+      });
+
+      if (error) {
+        const msg = error.message?.toLowerCase() || "";
+        const isRateLimited =
+          error.status === 429 ||
+          msg.includes("rate limit") ||
+          msg.includes("too many") ||
+          msg.includes("over_email_send_rate_limit");
+
+        if (isRateLimited) {
+          setMessage({ text: "Too many email requests. Please wait a moment and try again.", type: 'error' });
+          setCooldown(60);
+        } else {
+          setMessage({ text: error.message, type: 'error' });
+        }
+      } else {
+        setMessage({ text: "Verification email resent successfully! Please check your inbox.", type: 'success' });
+        setCooldown(60);
       }
-    });
-
-    setIsLoading(false);
-
-    if (error) {
-      setMessage({ text: error.message, type: 'error' });
-    } else {
-      setMessage({ text: "Verification email resent successfully!", type: 'success' });
+    } catch {
+      setMessage({ text: "Failed to resend verification email. Please try again later.", type: 'error' });
+    } finally {
+      setIsLoading(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -110,12 +142,14 @@ function VerifyEmailContent() {
             variant="outline" 
             className="w-full rounded-xl font-bold"
             onClick={handleResend}
-            disabled={isLoading || !email}
+            disabled={isLoading || cooldown > 0 || !email}
           >
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...
               </>
+            ) : cooldown > 0 ? (
+              `Resend available in ${cooldown}s`
             ) : (
               "Resend Verification Email"
             )}

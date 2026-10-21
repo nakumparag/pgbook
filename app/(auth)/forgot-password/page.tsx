@@ -1,41 +1,84 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { getAppUrl } from "@/lib/utils";
 
 export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [cooldown, setCooldown] = useState(0);
+
+  const isSubmittingRef = useRef(false);
   const supabase = createClient();
+
+  // Cooldown countdown timer to prevent duplicate / spam requests
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Prevent duplicate submission / double-click
+    if (isSubmittingRef.current || isLoading || cooldown > 0) {
+      return;
+    }
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    isSubmittingRef.current = true;
     setIsLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
+    try {
+      // Determine production redirect URL
+      const redirectTo = `${getAppUrl()}/auth/callback?next=/reset-password`;
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo,
+      });
 
-    setIsLoading(false);
+      if (resetError) {
+        const msg = resetError.message?.toLowerCase() || "";
+        const isRateLimited =
+          resetError.status === 429 ||
+          msg.includes("rate limit") ||
+          msg.includes("too many") ||
+          msg.includes("over_email_send_rate_limit");
 
-    // Security best practice: Do not reveal if the email exists or not.
-    // We always show the success message.
-    if (resetError && resetError.status !== 429) {
-       console.error("Password reset error:", resetError.message);
-       // Only show actual error to user if it's a rate limit or similar blocking error
+        if (isRateLimited) {
+          setError("Too many email requests. Please wait a moment and try again.");
+          setCooldown(60);
+          return;
+        }
+
+        setError(resetError.message || "Failed to send reset link. Please try again.");
+        return;
+      }
+
+      setIsSuccess(true);
+      setCooldown(60);
+    } catch {
+      setError("An unexpected error occurred. Please try again later.");
+    } finally {
+      setIsLoading(false);
+      isSubmittingRef.current = false;
     }
-
-    setIsSuccess(true);
   };
 
   return (
@@ -66,15 +109,27 @@ export default function ForgotPasswordPage() {
                 <Mail className="w-8 h-8 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-bold mb-2">Check your email</h3>
+                <h3 className="text-xl font-bold mb-2">Password reset link sent</h3>
                 <p className="text-muted-foreground text-sm">
-                  We've sent a password reset link to your email address. 
-                  Please check your inbox.
+                  Password reset link sent. Please check your email.
                 </p>
+              </div>
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsSuccess(false);
+                    setError(null);
+                  }}
+                  disabled={cooldown > 0}
+                  className="w-full rounded-xl py-5 font-semibold text-sm"
+                >
+                  {cooldown > 0 ? `Resend available in ${cooldown}s` : "Send another link"}
+                </Button>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} method="POST" action="#" className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground ml-1">Email address</label>
                 <div className="relative">
@@ -82,7 +137,10 @@ export default function ForgotPasswordPage() {
                   <Input 
                     type="email" 
                     name="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required 
+                    autoComplete="email"
                     className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                     placeholder="name@example.com"
                   />
@@ -91,7 +149,7 @@ export default function ForgotPasswordPage() {
 
               <Button 
                 type="submit" 
-                disabled={isLoading}
+                disabled={isLoading || cooldown > 0 || !email.trim()}
                 size="lg"
                 className="w-full py-6 text-base rounded-xl font-bold"
               >
@@ -100,6 +158,8 @@ export default function ForgotPasswordPage() {
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Sending link...
                   </>
+                ) : cooldown > 0 ? (
+                  `Wait ${cooldown}s before retrying`
                 ) : (
                   "Send Reset Link"
                 )}

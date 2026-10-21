@@ -1,95 +1,191 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { Home, Mail, Lock, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getAppUrl } from "@/lib/utils";
 
-export default function SignupPage() {
+function SignupContent() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isOwner, setIsOwner] = useState(false);
+  const [ownerType, setOwnerType] = useState("PG Owner");
+
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  const isSubmittingRef = useRef(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextParam = searchParams.get('next') || searchParams.get('redirect');
   const supabase = createClient();
+
+  // Strip any accidental email or password query parameters immediately on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search) {
+      const url = new URL(window.location.href);
+      let changed = false;
+      if (url.searchParams.has("password")) {
+        url.searchParams.delete("password");
+        changed = true;
+      }
+      if (url.searchParams.has("email")) {
+        url.searchParams.delete("email");
+        changed = true;
+      }
+      if (changed) {
+        const cleanQuery = url.searchParams.toString();
+        const cleanPath = url.pathname + (cleanQuery ? `?${cleanQuery}` : "");
+        window.history.replaceState({}, "", cleanPath);
+      }
+    }
+  }, []);
+
+  const getSafeRedirectUrl = () => {
+    if (nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')) {
+      return nextParam;
+    }
+    return '/dashboard';
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (isSubmittingRef.current || isLoading || isGoogleLoading) {
+      return;
+    }
+
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
-    const fullName = formData.get("fullName") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+
+    if (trimmedName.length < 2) {
+      setError("Full name must be at least 2 characters long");
+      return;
+    }
+
+    if (!trimmedEmail) {
+      setError("Email address is required");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
-      setIsLoading(false);
       return;
     }
 
     // Basic password strength validation
     if (password.length < 8) {
       setError("Password must be at least 8 characters long");
-      setIsLoading(false);
       return;
     }
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
       setError("Password must contain at least one uppercase letter, one lowercase letter, and one number");
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+
+    try {
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+        options: {
+          data: {
+            full_name: trimmedName,
+            role: isOwner ? "OWNER" : "USER",
+            phone: trimmedPhone || null,
+            owner_type: isOwner ? ownerType : null
+          },
+          emailRedirectTo: `${getAppUrl()}/auth/callback`,
+        }
+      });
+
+      if (signUpError) {
+        const msg = signUpError.message?.toLowerCase() || "";
+        const isRateLimited =
+          signUpError.status === 429 ||
+          msg.includes("rate limit") ||
+          msg.includes("too many") ||
+          msg.includes("over_email_send_rate_limit");
+
+        if (isRateLimited) {
+          setError("Too many email requests. Please wait a moment and try again.");
+        } else if (msg.includes('already registered') || signUpError.status === 422) {
+          setError("An account with this email already exists. Please log in.");
+        } else {
+          setError(signUpError.message);
+        }
+        return;
+      }
+
+      // Check if account already existed (Supabase returns empty identities array when email confirmation is enabled and email is taken)
+      if (signUpData.user && signUpData.user.identities && signUpData.user.identities.length === 0) {
+        setError("An account with this email already exists. Please log in.");
+        return;
+      }
+
+      // Clear password from memory
+      setPassword("");
+      setConfirmPassword("");
+
+      // If session is present, email confirmation is disabled in Supabase - user is immediately authenticated!
+      if (signUpData.session) {
+        // Update phone on the profile record if provided and trigger didn't include it
+        if (trimmedPhone && signUpData.user) {
+          await supabase
+            .from('profiles')
+            .update({ phone: trimmedPhone })
+            .eq('id', signUpData.user.id);
+        }
+
+        if (isOwner) {
+          router.replace('/become-owner');
+        } else {
+          router.replace(getSafeRedirectUrl());
+        }
+        router.refresh();
+        return;
+      }
+
+      // Otherwise, email confirmation is required - redirect to verification notice without credentials
+      router.replace(`/verify-email?email=${encodeURIComponent(trimmedEmail)}`);
+    } catch {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
       setIsLoading(false);
-      return;
+      isSubmittingRef.current = false;
     }
-
-    const phone = formData.get("phone") as string;
-    const isOwner = formData.get("isOwner") === "on";
-    const ownerType = formData.get("ownerType") as string;
-
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          role: isOwner ? "OWNER" : "USER",
-          phone: phone,
-          owner_type: isOwner ? ownerType : null
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      }
-    });
-
-    setIsLoading(false);
-
-    if (signUpError) {
-      if (signUpError.message.toLowerCase().includes('already registered') || signUpError.status === 422) {
-        setError("An account with this email already exists");
-      } else {
-        setError(signUpError.message);
-      }
-      return;
-    }
-
-    // Pass email as query param so verify-email can use it for resend
-    router.push(`/verify-email?email=${encodeURIComponent(email)}`);
   };
 
   const handleGoogleLogin = async () => {
+    if (isLoading || isGoogleLoading) return;
     setIsGoogleLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${getAppUrl()}/auth/callback?next=${encodeURIComponent(getSafeRedirectUrl())}`,
+        }
+      });
+      
+      if (error) {
+        setError(error.message);
+        setIsGoogleLoading(false);
       }
-    });
-    
-    if (error) {
-      setError(error.message);
+    } catch {
+      setError("Failed to initiate Google sign-in. Please try again.");
       setIsGoogleLoading(false);
     }
   };
@@ -118,7 +214,7 @@ export default function SignupPage() {
             </div>
           )}
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} method="POST" action="#" className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground ml-1">Full Name</label>
               <div className="relative">
@@ -126,7 +222,10 @@ export default function SignupPage() {
                 <Input 
                   type="text" 
                   name="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   required 
+                  autoComplete="name"
                   className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                   placeholder="John Doe"
                 />
@@ -140,7 +239,10 @@ export default function SignupPage() {
                 <Input 
                   type="email" 
                   name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required 
+                  autoComplete="email"
                   className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                   placeholder="name@example.com"
                 />
@@ -154,7 +256,10 @@ export default function SignupPage() {
                 <Input 
                   type="tel" 
                   name="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   required 
+                  autoComplete="tel"
                   className="pl-12 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                   placeholder="9876543210"
                   pattern="[0-9]{10}"
@@ -167,25 +272,27 @@ export default function SignupPage() {
                 <input 
                   type="checkbox" 
                   name="isOwner" 
+                  checked={isOwner}
+                  onChange={(e) => setIsOwner(e.target.checked)}
                   className="w-5 h-5 rounded border-muted-foreground text-primary focus:ring-primary"
-                  onChange={(e) => {
-                    const select = document.getElementById("ownerTypeSelect");
-                    if (select) select.style.display = e.target.checked ? "block" : "none";
-                  }}
                 />
                 <span className="font-semibold text-foreground">I want to list my PG/Property</span>
               </label>
               
-              <div id="ownerTypeSelect" className="mt-4 space-y-2 hidden">
-                <label className="text-sm font-semibold text-foreground ml-1">Owner Type</label>
-                <select 
-                  name="ownerType" 
-                  className="w-full pl-4 py-3 rounded-xl bg-muted/50 focus-visible:bg-transparent border border-border outline-none"
-                >
-                  <option value="PG Owner">PG Owner</option>
-                  <option value="Property Owner">Property Owner</option>
-                </select>
-              </div>
+              {isOwner && (
+                <div className="mt-4 space-y-2">
+                  <label className="text-sm font-semibold text-foreground ml-1">Owner Type</label>
+                  <select 
+                    name="ownerType" 
+                    value={ownerType}
+                    onChange={(e) => setOwnerType(e.target.value)}
+                    className="w-full pl-4 py-3 rounded-xl bg-muted/50 focus-visible:bg-transparent border border-border outline-none"
+                  >
+                    <option value="PG Owner">PG Owner</option>
+                    <option value="Property Owner">Property Owner</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -195,7 +302,10 @@ export default function SignupPage() {
                 <Input 
                   type="password" 
                   name="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required 
+                  autoComplete="new-password"
                   className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                   placeholder="Create a password"
                   minLength={8}
@@ -210,7 +320,10 @@ export default function SignupPage() {
                 <Input 
                   type="password" 
                   name="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required 
+                  autoComplete="new-password"
                   className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                   placeholder="Confirm your password"
                   minLength={8}
@@ -278,5 +391,17 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    }>
+      <SignupContent />
+    </Suspense>
   );
 }

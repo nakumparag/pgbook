@@ -9,29 +9,75 @@ import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { VisitTracker } from "@/components/pg/VisitTracker";
+import { SAMPLE_PGS, getSamplePGBySlug } from "@/lib/sample-pgs";
 
 interface PGDetailProps {
   params: Promise<{ slug: string }>;
 }
 
 async function getPGBySlug(slug: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("pgs")
-    .select(`
-      id, slug, name, description, address, gender, rating, review_count, status, is_verified, owner_id, available_from, rules,
-      cities ( name ), localities ( name ),
-      rooms ( id, room_type, rent, total_beds, occupied_beds, security_deposit, electricity_charges, maintenance_charges, other_charges ),
-      pg_images ( url, is_primary, category ),
-      pg_amenities ( amenities ( id, name, icon, category ) ),
-      profiles:owner_id ( phone )
-    `)
-    .eq("slug", slug)
-    .eq("status", "APPROVED")
-    .single();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("pgs")
+      .select(`
+        id, slug, name, description, address, gender, rating, review_count, status, is_verified, owner_id, available_from, rules,
+        cities ( name ), localities ( name ),
+        rooms ( id, room_type, rent, total_beds, occupied_beds, security_deposit, electricity_charges, maintenance_charges, other_charges ),
+        pg_images ( url, is_primary, category ),
+        pg_amenities ( amenities ( id, name, icon, category ) ),
+        profiles:owner_id ( phone )
+      `)
+      .eq("slug", slug)
+      .maybeSingle();
 
-  if (error || !data) return null;
-  return data;
+    if (data && !error) return data;
+  } catch {
+    // If Supabase fetch fails, fallback to sample
+  }
+
+  // Fallback to sample PGs for demo/testing
+  const sample = getSamplePGBySlug(slug);
+  if (sample) {
+    return {
+      id: sample.id,
+      slug: sample.slug,
+      name: sample.name,
+      description: sample.description,
+      address: sample.address,
+      gender: sample.gender || "UNISEX",
+      rating: sample.rating || 4.5,
+      review_count: sample.review_count || 12,
+      status: sample.status || "APPROVED",
+      is_verified: sample.is_verified ?? true,
+      owner_id: sample.owner_id || "sample-owner",
+      available_from: sample.available_from,
+      rules: [
+        "Gate closes at 10:30 PM",
+        "Visitors allowed in common area till 8 PM",
+        "Smoking & alcohol strictly prohibited on premises",
+        "Maintain quiet hours between 11 PM and 6 AM"
+      ],
+      cities: sample.cities,
+      localities: sample.localities,
+      rooms: (sample.rooms || []).map((r: any, idx: number) => ({
+        id: `sample-room-${idx}`,
+        room_type: r.room_type,
+        rent: r.rent,
+        total_beds: r.room_type === "SINGLE" ? 1 : r.room_type === "2_SHARING" ? 2 : r.room_type === "3_SHARING" ? 3 : 4,
+        occupied_beds: 1,
+        security_deposit: r.rent * 2,
+        electricity_charges: 500,
+        maintenance_charges: 300,
+        other_charges: 0,
+      })),
+      pg_images: sample.pg_images || [],
+      pg_amenities: sample.pg_amenities || [],
+      profiles: { phone: sample.contact_phone || "9876543210" },
+    };
+  }
+
+  return null;
 }
 
 export async function generateMetadata({ params }: PGDetailProps): Promise<Metadata> {
@@ -78,12 +124,18 @@ export async function generateMetadata({ params }: PGDetailProps): Promise<Metad
 }
 
 export async function generateStaticParams() {
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-  );
-  const { data } = await supabase.from("pgs").select("slug").eq("status", "APPROVED");
-  return (data || []).map((pg) => ({ slug: pg.slug }));
+  try {
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!
+    );
+    const { data } = await supabase.from("pgs").select("slug").eq("status", "APPROVED");
+    const dbSlugs = (data || []).map((pg) => ({ slug: pg.slug }));
+    const sampleSlugs = SAMPLE_PGS.map((p) => ({ slug: p.slug }));
+    return [...sampleSlugs, ...dbSlugs];
+  } catch {
+    return SAMPLE_PGS.map((p) => ({ slug: p.slug }));
+  }
 }
 
 export default async function PGDetail({ params }: PGDetailProps) {

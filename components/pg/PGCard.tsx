@@ -18,17 +18,19 @@ export interface SupabasePGListing {
   review_count: number;
   cities: { name: string } | null;
   localities: { name: string } | null;
-  rooms: { rent: number }[];
+  rooms: { rent: number; room_type?: string }[];
   pg_images: { url: string; is_primary: boolean }[];
   pg_amenities: { amenities: { name: string; icon: string; category: string } | null }[];
+  monthly_rent_from?: number;
+  monthly_rent_to?: number;
   isFavorited?: boolean;
 }
 
 export function PGCard({ pg }: { pg: SupabasePGListing }) {
-  const primaryImage = pg.pg_images.find(img => img.is_primary)?.url || pg.pg_images[0]?.url || "/placeholder-image.jpg";
+  const primaryImage = pg.pg_images?.find(img => img.is_primary)?.url || pg.pg_images?.[0]?.url || "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80";
   
   // Extract amenities safely
-  const amenitiesList = pg.pg_amenities
+  const amenitiesList = (pg.pg_amenities || [])
     .map(pa => pa.amenities)
     .filter((a): a is NonNullable<typeof a> => a !== null);
   
@@ -37,20 +39,20 @@ export function PGCard({ pg }: { pg: SupabasePGListing }) {
   
   const hasFood = amenitiesList.some(a => a.name.toLowerCase().includes("meal") || a.name.toLowerCase().includes("food"));
 
-  // Calculate minimum rent from rooms
-  const rentMin = pg.rooms.length > 0 
+  // Calculate minimum rent from rooms or monthly_rent_from
+  const rentMin = (pg.rooms && pg.rooms.length > 0)
     ? Math.min(...pg.rooms.map(r => r.rent)) 
-    : 0;
+    : ((pg as any).monthly_rent_from || 0);
 
   const cityName = pg.cities?.name || "";
   const areaName = pg.localities?.name || "";
 
   return (
     <Link href={`/pg/${pg.slug}`}>
-      <Card className="overflow-hidden group cursor-pointer border-transparent hover:border-border/50 h-full flex flex-col bg-card hover-lift">
+      <Card className="rounded-[20px] overflow-hidden group cursor-pointer border-transparent hover:border-border/50 h-full flex flex-col bg-card shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
         
         {/* Image Container */}
-        <div className="relative aspect-4/3 w-full overflow-hidden bg-muted">
+        <div className="relative h-[240px] w-full shrink-0 overflow-hidden bg-muted">
           <Image
             src={primaryImage}
             alt={pg.name}
@@ -83,7 +85,7 @@ export function PGCard({ pg }: { pg: SupabasePGListing }) {
         </div>
 
         {/* Content */}
-        <CardContent className="p-4 flex-1 flex flex-col">
+        <CardContent className="p-5 flex-1 flex flex-col">
           <div className="flex justify-between items-start gap-2 mb-1">
             <h3 className="font-heading font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors text-foreground">
               {pg.name}
@@ -114,7 +116,7 @@ export function PGCard({ pg }: { pg: SupabasePGListing }) {
           </div>
         </CardContent>
 
-        <CardFooter className="p-4 pt-0 border-t border-border/50 mt-auto flex items-center justify-between bg-card">
+        <CardFooter className="p-5 pt-0 border-t border-border/50 mt-auto flex items-center justify-between bg-card">
           <div>
             <p className="text-xs text-muted-foreground font-medium mb-0.5">Starts from</p>
             <p className="font-heading font-bold text-lg text-primary">

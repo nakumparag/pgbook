@@ -1,12 +1,5 @@
-"use client";
-
-import { Suspense } from "react";
-import { RoomDetailsContent } from "@/app/(owner)/owner/add-pg/page";
+import { redirect } from "next/navigation";
 
 export default function RoomsPage() {
-  return (
-    <Suspense fallback={<div className="animate-pulse bg-muted rounded-2xl h-96" />}>
-      <RoomDetailsContent basePath="/become-owner" />
-    </Suspense>
-  );
+  redirect("/become-owner");
 }

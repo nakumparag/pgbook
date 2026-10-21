@@ -53,7 +53,7 @@ export function BecomeOwner() {
                   className="bg-background text-foreground hover:bg-muted h-14 px-8 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition-all"
                   aria-label="List your PG now"
                 >
-                  <Link href="/owner/add-pg">
+                  <Link href="/become-owner">
                     List Your PG Now <ArrowRight className="ml-2 w-5 h-5" />
                   </Link>
                 </Button>

@@ -48,7 +48,7 @@ export function HeroSearch() {
       {/* Search Form */}
       <form
         onSubmit={handleSearch}
-        className="bg-white dark:bg-card rounded-2xl shadow-2xl border border-border/30 overflow-hidden"
+        className="bg-white dark:bg-card rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] border border-border/50 overflow-hidden"
         role="search"
         aria-label="Search for PGs"
       >
@@ -56,7 +56,7 @@ export function HeroSearch() {
         <div className="flex flex-col md:flex-row">
 
           {/* Location Field */}
-          <div className="flex-1 flex items-center gap-3 px-5 py-4 md:py-5 hover:bg-muted/30 transition-colors group border-b md:border-b-0 md:border-r border-border/50">
+          <div className="flex-1 flex items-center gap-3 px-6 py-4 md:py-6 hover:bg-muted/30 transition-colors group border-b md:border-b-0 md:border-r border-border/50">
             <MapPin className="w-5 h-5 text-primary shrink-0" aria-hidden="true" />
             <div className="flex flex-col flex-1 min-w-0">
               <label htmlFor="location-input" className="text-xs font-bold text-foreground mb-0.5 uppercase tracking-wide">
@@ -78,7 +78,7 @@ export function HeroSearch() {
           <div className="shrink-0 md:w-40 border-b md:border-b-0 md:border-r border-border/50">
             <Select value={budget} onValueChange={setBudget}>
               <SelectTrigger
-                className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 rounded-none px-5 py-4 md:py-5 hover:bg-muted/30 transition-colors gap-3"
+                className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 rounded-none px-6 py-4 md:py-6 hover:bg-muted/30 transition-colors gap-3"
                 aria-label="Select budget"
               >
                 <Wallet className="w-5 h-5 text-primary shrink-0" aria-hidden="true" />
@@ -101,7 +101,7 @@ export function HeroSearch() {
           <div className="shrink-0 md:w-44 border-b md:border-b-0 md:border-r border-border/50">
             <Select value={roomType} onValueChange={setRoomType}>
               <SelectTrigger
-                className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 rounded-none px-5 py-4 md:py-5 hover:bg-muted/30 transition-colors gap-3"
+                className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 rounded-none px-6 py-4 md:py-6 hover:bg-muted/30 transition-colors gap-3"
                 aria-label="Select room type"
               >
                 <Home className="w-5 h-5 text-primary shrink-0" aria-hidden="true" />
@@ -125,7 +125,7 @@ export function HeroSearch() {
           <div className="shrink-0 md:w-36 border-b md:border-b-0 md:border-r border-border/50">
             <Select value={food} onValueChange={setFood}>
               <SelectTrigger
-                className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 rounded-none px-5 py-4 md:py-5 hover:bg-muted/30 transition-colors gap-3"
+                className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 rounded-none px-6 py-4 md:py-6 hover:bg-muted/30 transition-colors gap-3"
                 aria-label="Select food preference"
               >
                 <Utensils className="w-5 h-5 text-primary shrink-0" aria-hidden="true" />
@@ -143,13 +143,13 @@ export function HeroSearch() {
           </div>
 
           {/* Search Button */}
-          <div className="p-3">
+          <div className="p-3 md:p-4 flex items-center">
             <button
               type="submit"
-              className="w-full md:w-14 flex items-center justify-center gap-2 gradient-primary text-white font-bold rounded-xl hover:opacity-90 transition-all active:scale-95 shadow-lg px-6 md:px-0 h-14"
+              className="w-full md:w-16 h-14 md:h-16 flex items-center justify-center gap-2 gradient-primary text-white font-bold rounded-[16px] hover:opacity-90 transition-all active:scale-95 shadow-lg px-6 md:px-0"
               aria-label="Search PGs"
             >
-              <Search className="w-5 h-5" aria-hidden="true" />
+              <Search className="w-6 h-6" aria-hidden="true" />
               <span className="md:hidden">Search PGs</span>
             </button>
           </div>

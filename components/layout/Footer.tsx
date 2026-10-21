@@ -21,8 +21,7 @@ const FOOTER_LINKS = {
     { label: "PG Guides", href: "/guides" },
   ],
   owners: [
-    { label: "Become an Owner", href: "/become-owner" },
-    { label: "List Your PG", href: "/owner/add-pg" },
+    { label: "List Your PG", href: "/become-owner" },
     { label: "Owner Dashboard", href: "/owner/dashboard" },
     { label: "Host Guidelines", href: "/owner/guidelines" },
   ],
@@ -149,7 +148,7 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4 text-sm">Explore</h4>
             <ul className="space-y-2.5">
               {FOOTER_LINKS.explore.map((link) => (
-                <li key={link.href}>
+                <li key={`${link.label}-${link.href}`}>
                   <Link
                     href={link.href}
                     className="text-white/55 hover:text-primary transition-colors text-sm"
@@ -166,7 +165,7 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4 text-sm">For Users</h4>
             <ul className="space-y-2.5">
               {FOOTER_LINKS.users.map((link) => (
-                <li key={link.href}>
+                <li key={`${link.label}-${link.href}`}>
                   <Link
                     href={link.href}
                     className="text-white/55 hover:text-primary transition-colors text-sm"
@@ -180,7 +179,7 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4 mt-6 text-sm">For Owners</h4>
             <ul className="space-y-2.5">
               {FOOTER_LINKS.owners.map((link) => (
-                <li key={link.href}>
+                <li key={`${link.label}-${link.href}`}>
                   <Link
                     href={link.href}
                     className="text-white/55 hover:text-primary transition-colors text-sm"
@@ -197,7 +196,7 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4 text-sm">Company</h4>
             <ul className="space-y-2.5 mb-6">
               {FOOTER_LINKS.company.map((link) => (
-                <li key={link.href}>
+                <li key={`${link.label}-${link.href}`}>
                   <Link
                     href={link.href}
                     className="text-white/55 hover:text-primary transition-colors text-sm"
@@ -211,7 +210,7 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4 text-sm">Legal</h4>
             <ul className="space-y-2.5">
               {FOOTER_LINKS.legal.map((link) => (
-                <li key={link.href}>
+                <li key={`${link.label}-${link.href}`}>
                   <Link
                     href={link.href}
                     className="text-white/55 hover:text-primary transition-colors text-sm"

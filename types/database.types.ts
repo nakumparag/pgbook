@@ -44,6 +44,7 @@ export interface Database {
           role?: UserRole
           full_name?: string | null
           avatar_url?: string | null
+          phone?: string | null
           id_verified?: boolean
           created_at?: string
           updated_at?: string

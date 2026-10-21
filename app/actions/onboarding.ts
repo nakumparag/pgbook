@@ -1,6 +1,15 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+
+const ownerVerificationSchema = z.object({
+  fullName: z.string().min(2, "Full name must be at least 2 characters long"),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Please enter a valid 10-digit Indian phone number"),
+  ownerType: z.enum(["PG Owner", "Property Owner", "Broker/Agent"]),
+  idType: z.enum(["Aadhaar", "PAN", "Voter ID", "Driving License"]),
+  idNumber: z.string().min(4, "ID Number is too short"),
+});
 
 export async function updateOwnerVerification(formData: FormData) {
   try {
@@ -11,27 +20,51 @@ export async function updateOwnerVerification(formData: FormData) {
       return { success: false, error: "Not authenticated" };
     }
 
-    const fullName = formData.get("fullName") as string;
-    const phone = formData.get("phone") as string;
-    const ownerType = formData.get("ownerType") as string;
-    const idType = formData.get("idType") as string;
-    const idNumber = formData.get("idNumber") as string;
+    const rawData = {
+      fullName: formData.get("fullName"),
+      phone: formData.get("phone"),
+      ownerType: formData.get("ownerType"),
+      idType: formData.get("idType"),
+      idNumber: formData.get("idNumber"),
+    };
+
+    const validatedData = ownerVerificationSchema.safeParse(rawData);
+
+    if (!validatedData.success) {
+      const firstError = validatedData.error.issues[0].message;
+      return { success: false, error: firstError };
+    }
+
+    const { fullName, phone, ownerType, idType, idNumber } = validatedData.data;
+    
+    // Additional format checks based on ID Type
+    if (idType === "Aadhaar" && !/^\d{12}$/.test(idNumber)) {
+      return { success: false, error: "Aadhaar number must be exactly 12 digits" };
+    }
+    if (idType === "PAN" && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(idNumber)) {
+      return { success: false, error: "Invalid PAN format (e.g. ABCDE1234F)" };
+    }
+
     const idDocument = formData.get("idDocument") as File | null;
 
     let idDocumentUrl = undefined;
 
-    if (idDocument) {
+    if (idDocument && idDocument.size > 0) {
+      if (idDocument.size > 10 * 1024 * 1024) {
+        return { success: false, error: "Document size exceeds 10MB limit" };
+      }
+
       const fileExt = idDocument.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('owner-documents')
-        .upload(filePath, idDocument);
+        .upload(filePath, idDocument, { upsert: true });
 
       if (uploadError) {
         console.error("Document upload error:", uploadError);
-        return { success: false, error: "Failed to upload document" };
+        return { success: false, error: "Failed to upload document securely" };
       }
 
       idDocumentUrl = filePath;
@@ -73,7 +106,8 @@ export async function updateOwnerVerification(formData: FormData) {
 
     if (ownerError) {
       console.error("Owner profile update error:", ownerError);
-      return { success: false, error: "Failed to save verification details" };
+      // Let's pass the real error if it's related to cache or constraints so we know
+      return { success: false, error: ownerError.message || "Failed to save verification details" };
     }
 
     // Insert an approval request for the owner verification

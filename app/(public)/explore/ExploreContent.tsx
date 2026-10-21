@@ -9,6 +9,7 @@ import { PGCard, SupabasePGListing } from "@/components/pg/PGCard";
 import { SearchFilters, ActiveFilters } from "@/components/search/SearchFilters";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { SAMPLE_PGS } from "@/lib/sample-pgs";
 
 const SORT_OPTIONS = [
   { value: "recommended", label: "Recommended" },
@@ -39,7 +40,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
   const urlSearchParams = useSearchParams();
   const supabase = createClient();
 
-  const [realListings, setRealListings] = useState<any[]>([]);
+  const [realListings, setRealListings] = useState<any[]>(SAMPLE_PGS);
   const [loading, setLoading] = useState(true);
 
   // Read all URL params
@@ -70,19 +71,28 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
   useEffect(() => {
     async function fetchListings() {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("pgs")
-        .select(`
-          id, slug, name, address, gender, status, is_verified, rating, review_count, description, created_at,
-          cities ( name ), localities ( name ), rooms ( rent, room_type ),
-          pg_images ( url, is_primary ), pg_amenities ( amenities ( name, icon, category ) )
-        `)
-        .eq("status", "APPROVED");
+      try {
+        const { data, error } = await supabase
+          .from("pgs")
+          .select(`
+            id, slug, name, address, gender, status, is_verified, rating, review_count, description, created_at, monthly_rent_from, monthly_rent_to, contact_phone,
+            cities ( name ), localities ( name ), rooms ( rent, room_type ),
+            pg_images ( url, is_primary ), pg_amenities ( amenities ( name, icon, category ) )
+          `)
+          .eq("status", "APPROVED");
 
-      if (!error && data) {
-        setRealListings(data);
+        if (!error && data && data.length > 0) {
+          const realSlugs = new Set(data.map((d: any) => d.slug));
+          const nonDuplicateSamples = SAMPLE_PGS.filter((s) => !realSlugs.has(s.slug));
+          setRealListings([...data, ...nonDuplicateSamples]);
+        } else {
+          setRealListings(SAMPLE_PGS);
+        }
+      } catch {
+        setRealListings(SAMPLE_PGS);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     fetchListings();
   }, [supabase]);
@@ -136,10 +146,10 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
 
     // Helper to get safe values from Supabase object
     const getCity = (pg: any) => pg.cities?.name?.toLowerCase() || "";
-    const getArea = (pg: any) => pg.localities?.name?.toLowerCase() || "";
-    const getRentMin = (pg: any) => pg.rooms?.length ? Math.min(...pg.rooms.map((r: any) => r.rent)) : 0;
-    const getRentMax = (pg: any) => pg.rooms?.length ? Math.max(...pg.rooms.map((r: any) => r.rent)) : 0;
-    const getFlatAmenities = (pg: any) => pg.pg_amenities?.map((pa: any) => pa.amenities?.name?.toLowerCase() || "") || [];
+    const getArea = (pg: any) => pg.localities?.name?.toLowerCase() || pg.address?.toLowerCase() || "";
+    const getRentMin = (pg: any) => (pg.rooms && pg.rooms.length > 0) ? Math.min(...pg.rooms.map((r: any) => r.rent)) : (pg.monthly_rent_from || 0);
+    const getRentMax = (pg: any) => (pg.rooms && pg.rooms.length > 0) ? Math.max(...pg.rooms.map((r: any) => r.rent)) : (pg.monthly_rent_to || pg.monthly_rent_from || 0);
+    const getFlatAmenities = (pg: any) => (pg.pg_amenities || []).map((pa: any) => pa.amenities?.name?.toLowerCase() || "");
 
     if (cityQuery) {
       results = results.filter((pg) => getCity(pg).includes(cityQuery.toLowerCase()));
@@ -327,8 +337,8 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
         <main className="flex-1 flex flex-col" aria-label="Search results">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
             <div>
-              <h1 className="text-xl font-bold text-foreground mb-0.5">{heading}</h1>
-              <p className="text-muted-foreground text-sm">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2">{heading}</h1>
+              <p className="text-muted-foreground text-base">
                 {loading ? "Searching..." : `${sortedListings.length} verified ${sortedListings.length === 1 ? "stay" : "stays"} found`}
               </p>
             </div>
@@ -392,7 +402,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
           </div>
 
           {view === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {loading ? (
                 <div className="col-span-full py-20 text-center text-muted-foreground">Loading PGs...</div>
               ) : sortedListings.length > 0 ? (
@@ -407,18 +417,20 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
                   </motion.div>
                 ))
               ) : (
-                <div className="col-span-full flex flex-col items-center justify-center py-20 border-2 border-dashed border-border rounded-2xl text-center px-8">
-                  <Search className="w-12 h-12 text-muted-foreground/30 mb-4" aria-hidden="true" />
-                  <h3 className="text-lg font-bold text-foreground mb-2">No PGs found</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Try adjusting your filters or search for a different city.
+                <div className="col-span-full flex flex-col items-center justify-center py-16 bg-muted/30 rounded-3xl text-center px-8 border border-border/50">
+                  <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center shadow-sm border border-border mb-5">
+                    <Search className="w-8 h-8 text-muted-foreground/60" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">No properties match your search</h3>
+                  <p className="text-muted-foreground text-sm max-w-sm mb-6">
+                    We couldn't find any PGs that match your current filters. Try adjusting your search criteria or looking in a different area.
                   </p>
-                  <button
+                  <Button
                     onClick={() => router.push("/explore")}
-                    className="mt-4 text-primary font-semibold text-sm hover:underline"
+                    className="rounded-xl px-6"
                   >
-                    View all PGs →
-                  </button>
+                    Clear all filters
+                  </Button>
                 </div>
               )}
             </div>

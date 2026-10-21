@@ -118,7 +118,7 @@ export function SearchFilters({ className, onFilterChange, initialLocation = "" 
       <div
         className={cn(
           "fixed top-0 bottom-0 left-0 z-50 w-[85%] max-w-sm bg-card border-r border-border p-6 shadow-2xl overflow-y-auto transition-transform duration-300",
-          "lg:static lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:shadow-sm lg:p-6 lg:z-auto lg:translate-x-0 lg:overflow-visible",
+          "lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] lg:w-auto lg:max-w-none lg:border lg:rounded-2xl lg:shadow-sm lg:p-6 lg:z-auto lg:translate-x-0 lg:overflow-y-auto hide-scrollbar",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           className
         )}

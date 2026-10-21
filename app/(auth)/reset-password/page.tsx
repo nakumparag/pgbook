@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Lock, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,43 +12,91 @@ export default function ResetPasswordPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const isSubmittingRef = useRef(false);
   const supabase = createClient();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+
+      // Check URL parameters for errors
+      const errorDesc = url.searchParams.get("error_description") || url.searchParams.get("error");
+      if (errorDesc) {
+        setError(decodeURIComponent(errorDesc).replace(/\+/g, " "));
+      }
+
+      // Check hash fragment for errors (standard Supabase redirect format)
+      if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hashError = hashParams.get("error_description") || hashParams.get("error");
+        if (hashError) {
+          setError(decodeURIComponent(hashError).replace(/\+/g, " "));
+        }
+      }
+
+      // If PKCE code is present directly, exchange it for session
+      const code = url.searchParams.get("code");
+      if (code) {
+        supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeErr }) => {
+          if (exchangeErr) {
+            setError("The reset link has expired or is invalid. Please request a new one.");
+          } else {
+            url.searchParams.delete("code");
+            const cleanQuery = url.searchParams.toString();
+            const cleanPath = url.pathname + (cleanQuery ? `?${cleanQuery}` : "");
+            window.history.replaceState({}, "", cleanPath);
+          }
+        });
+      }
+    }
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
 
-    const formData = new FormData(e.currentTarget);
-    const password = formData.get("password") as string;
-    const confirmPassword = formData.get("confirmPassword") as string;
+    if (isSubmittingRef.current || isLoading) {
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
-      setIsLoading(false);
       return;
     }
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters long");
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (updateError) {
+        setError(updateError.message || "Failed to update password. The reset link may have expired.");
+        return;
+      }
+
+      // Clear password from memory
+      setPassword("");
+      setConfirmPassword("");
+
+      // Force sign out so they must log in with the new password
+      await supabase.auth.signOut();
+      setIsSuccess(true);
+    } catch {
+      setError("An unexpected error occurred. Please try requesting a new reset link.");
+    } finally {
       setIsLoading(false);
-      return;
+      isSubmittingRef.current = false;
     }
-
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: password
-    });
-
-    setIsLoading(false);
-
-    if (updateError) {
-      setError(updateError.message);
-      return;
-    }
-
-    // Force sign out so they must log in with the new password
-    await supabase.auth.signOut();
-    setIsSuccess(true);
   };
 
   return (
@@ -88,7 +136,7 @@ export default function ResetPasswordPage() {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} method="POST" action="#" className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground ml-1">New Password</label>
                 <div className="relative">
@@ -96,7 +144,10 @@ export default function ResetPasswordPage() {
                   <Input 
                     type="password" 
                     name="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required 
+                    autoComplete="new-password"
                     className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                     placeholder="Enter new password"
                     minLength={8}
@@ -111,7 +162,10 @@ export default function ResetPasswordPage() {
                   <Input 
                     type="password" 
                     name="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required 
+                    autoComplete="new-password"
                     className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
                     placeholder="Confirm new password"
                     minLength={8}

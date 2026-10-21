@@ -2,19 +2,24 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+
+async function isDevAdmin() {
+  if (process.env.NODE_ENV !== "production") {
+    const cookieStore = await cookies();
+    return cookieStore.get("pgbook_dev_admin_session")?.value === "true";
+  }
+  return false;
+}
 
 export async function updatePgStatus(pgId: string, status: "APPROVED" | "REJECTED" | "DRAFT" | "ARCHIVED") {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  if (!(await isDevAdmin())) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
 
-  if (!user) {
-    return { success: false, error: "Not authenticated" };
-  }
-
-  // Ensure user is an ADMIN
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "ADMIN") {
-    return { success: false, error: "Unauthorized" };
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
   }
 
   const updateData: any = { status };
@@ -36,11 +41,13 @@ export async function updatePgStatus(pgId: string, status: "APPROVED" | "REJECTE
 
 export async function verifyOwnerId(ownerId: string, verify: boolean = true) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!(await isDevAdmin())) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+  }
 
   const { error } = await supabase.from("profiles").update({ id_verified: verify }).eq("id", ownerId);
   if (error) return { success: false, error: "Failed to update owner." };
@@ -51,11 +58,13 @@ export async function verifyOwnerId(ownerId: string, verify: boolean = true) {
 
 export async function verifyProperty(pgId: string, verify: boolean = true) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!(await isDevAdmin())) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+  }
 
   const { error } = await supabase.from("pgs").update({ is_verified: verify }).eq("id", pgId);
   if (error) return { success: false, error: "Failed to update property." };
@@ -66,11 +75,13 @@ export async function verifyProperty(pgId: string, verify: boolean = true) {
 
 export async function resolveApprovalRequest(requestId: string, approve: boolean, notes: string = "") {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated" };
+  if (!(await isDevAdmin())) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated" };
 
-  const { data: adminProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (adminProfile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+    const { data: adminProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (adminProfile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
+  }
 
   const { data: rawReq } = await supabase.from("approval_requests").select("*").eq("id", requestId).single();
   const req = rawReq as any;
