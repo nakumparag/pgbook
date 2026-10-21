@@ -20,7 +20,7 @@ async function verifyOwner() {
 async function verifyPgOwnership(supabase: any, userId: string, pgId: string) {
   const { data: pg } = await supabase
     .from("pgs")
-    .select("id, owner_id, status")
+    .select("id, owner_id, status, slug")
     .eq("id", pgId)
     .single();
   if (!pg || pg.owner_id !== userId) return null;
@@ -41,7 +41,8 @@ export async function updateOwnerRoomInventory(pgId: string, roomId: string, val
   }
 
   const { data: room } = await supabase.from("rooms").select("id, pg_id").eq("id", roomId).eq("pg_id", pgId).maybeSingle();
-  if (!room || !(await verifyPgOwnership(supabase, user.id, pgId))) return { success: false, error: "Room not found or unauthorized." };
+  const pg = await verifyPgOwnership(supabase, user.id, pgId);
+  if (!room || !pg) return { success: false, error: "Room not found or unauthorized." };
 
   const { error: saveError } = await supabase.from("rooms").update({
     rent: values.rent,
@@ -58,7 +59,7 @@ export async function updateOwnerRoomInventory(pgId: string, roomId: string, val
   }
   revalidatePath("/owner/dashboard");
   revalidatePath("/explore");
-  revalidatePath(`/pg`);
+  revalidatePath(`/pg/${pg.slug}`);
   return { success: true, error: null };
 }
 
