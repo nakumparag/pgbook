@@ -79,7 +79,7 @@ export function SEOContent() {
                 { label: "Girls PG in Ahmedabad", href: "/explore?city=ahmedabad&gender=girls" },
                 { label: "Boys PG in Ahmedabad", href: "/explore?city=ahmedabad&gender=boys" },
                 { label: "PG under ₹7,000 in Ahmedabad", href: "/explore?city=ahmedabad&budget=under-7000" },
-                { label: "Co-Living in Ahmedabad", href: "/explore?city=ahmedabad&type=co-living" },
+                { label: "Co-Living in Ahmedabad", href: "/explore?city=ahmedabad&gender=unisex" },
               ].map((link) => (
                 <Link
                   key={link.href}

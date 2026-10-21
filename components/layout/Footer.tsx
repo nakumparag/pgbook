@@ -8,10 +8,10 @@ const FOOTER_LINKS = {
     { label: "Popular Cities", href: "/explore" },
     { label: "Popular Areas", href: "/explore#localities" },
     { label: "Room Types", href: "/explore?roomType=personal" },
-    { label: "Budget PGs", href: "/explore?budget=5000" },
+    { label: "Budget PGs", href: "/explore?budget=under-5000" },
     { label: "Girls PG", href: "/explore?gender=girls" },
     { label: "Boys PG", href: "/explore?gender=boys" },
-    { label: "Co-Living", href: "/explore?type=co-living" },
+    { label: "Co-Living", href: "/explore?gender=unisex" },
   ],
   users: [
     { label: "Saved PGs", href: "/favorites" },
