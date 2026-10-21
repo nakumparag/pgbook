@@ -93,7 +93,7 @@ export async function resolveApprovalRequest(requestId: string, approve: boolean
     if (req.request_type === 'OWNER') {
       const { error: ownerError } = await supabase.from("owner_profiles").update({ status: "APPROVED" }).eq("user_id", req.owner_id);
       if (ownerError) return { success: false, error: "Could not approve the owner. Please retry." };
-      const { error: profileError } = await supabase.from("profiles").update({ id_verified: true }).eq("id", req.owner_id);
+      const { error: profileError } = await supabase.from("profiles").update({ id_verified: true, role: "OWNER" }).eq("id", req.owner_id);
       if (profileError) return { success: false, error: "Owner approval was saved, but ID verification did not update. Please retry." };
     } else if (req.request_type === 'PG' && req.pg_id) {
       const { error: pgError } = await supabase.from("pgs").update({ status: "APPROVED", is_verified: true, verified_at: new Date().toISOString() }).eq("id", req.pg_id);

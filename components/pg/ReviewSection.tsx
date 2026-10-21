@@ -1,89 +1,64 @@
-"use client";
-
-import { Star, ThumbsUp } from "lucide-react";
+import { Star } from "lucide-react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
 
-// Mock reviews
-const mockReviews = [
-  {
-    id: "1",
-    rating: 5,
-    body: "Excellent PG! The food is great and the rooms are cleaned daily. WiFi speed is decent too.",
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    user: { name: "Aditi S.", avatar: "A" }
-  },
-  {
-    id: "2",
-    rating: 4,
-    body: "Good location, near the metro. The only issue is sometimes the washing machine is occupied.",
-    createdAt: new Date(Date.now() - 86400000 * 12).toISOString(),
-    user: { name: "Rohan M.", avatar: "R" }
-  },
-  {
-    id: "3",
-    rating: 5,
-    body: "Owner is very friendly and cooperative. Really feels like home. Highly recommended.",
-    createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
-    user: { name: "Neha K.", avatar: "N" }
-  }
-];
+interface Review {
+  id: string;
+  rating: number;
+  title: string | null;
+  content: string | null;
+  created_at: string;
+  profiles?: { full_name: string | null; avatar_url: string | null } | null;
+}
 
-export function ReviewSection({ pgId, rating, count }: { pgId?: string, rating: number, count: number }) {
+export function ReviewSection({ rating, reviews }: { rating: number; reviews: Review[] }) {
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-6 pb-6 border-b border-border">
-        <div className="flex flex-col items-center justify-center bg-primary/10 rounded-2xl w-24 h-24">
-          <span className="text-4xl font-heading font-black text-primary">{rating}</span>
-          <div className="flex text-warning mt-1">
-            {[1,2,3,4,5].map(i => (
-              <Star key={i} className={`w-3.5 h-3.5 ${i <= rating ? "fill-warning" : "text-muted-foreground"}`} />
-            ))}
+    <section className="space-y-8" aria-labelledby="guest-reviews-heading">
+      <div className="flex flex-wrap items-center gap-5 pb-6 border-b border-border">
+        {reviews.length > 0 && (
+          <div className="flex flex-col items-center justify-center bg-primary/10 rounded-2xl w-24 h-24">
+            <span className="text-4xl font-heading font-black text-primary">{rating.toFixed(1)}</span>
+            <div className="flex text-warning mt-1" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} aria-hidden="true" className={`w-3.5 h-3.5 ${star <= Math.round(rating) ? "fill-warning" : "text-muted-foreground"}`} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div>
-          <h3 className="text-xl font-heading font-bold mb-1 text-foreground">Guest Reviews</h3>
-          <p className="text-muted-foreground font-medium">Based on {count} verified ratings</p>
+          <h3 id="guest-reviews-heading" className="text-xl font-heading font-bold mb-1 text-foreground">Guest Reviews</h3>
+          <p className="text-muted-foreground font-medium">
+            {reviews.length ? `Based on ${reviews.length} guest ${reviews.length === 1 ? "review" : "reviews"}` : "No reviews yet"}
+          </p>
         </div>
       </div>
 
-      <div className="space-y-8">
-        {mockReviews.map((review) => (
-          <div key={review.id} className="pb-8 border-b border-border/50 last:border-0 last:pb-0">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary to-accent text-white flex items-center justify-center font-bold text-lg shadow-md">
-                  {review.user.avatar}
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground">{review.user.name}</h4>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
-                    <div className="flex text-warning">
-                      {[1,2,3,4,5].map(i => (
-                        <Star key={i} className={`w-3.5 h-3.5 ${i <= review.rating ? "fill-warning" : "text-muted-foreground"}`} />
-                      ))}
+      {reviews.length > 0 ? (
+        <div className="space-y-6">
+          {reviews.map((review) => {
+            const name = review.profiles?.full_name?.trim() || "PGBook user";
+            return (
+              <article key={review.id} className="pb-6 border-b border-border/50 last:border-0">
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h4 className="font-semibold text-foreground">{name}</h4>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="inline-flex items-center gap-1" aria-label={`${review.rating} out of 5 stars`}>
+                        <Star aria-hidden="true" className="w-4 h-4 fill-warning text-warning" /> {review.rating}
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <time dateTime={review.created_at}>{format(new Date(review.created_at), "MMM d, yyyy")}</time>
                     </div>
-                    <span>•</span>
-                    <span>{format(new Date(review.createdAt), 'MMM d, yyyy')}</span>
                   </div>
                 </div>
-              </div>
-            </div>
-            <p className="text-foreground leading-relaxed">
-              {review.body}
-            </p>
-            <div className="mt-4 flex items-center gap-2">
-              <button className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-1 px-3 -ml-3 rounded-lg hover:bg-muted">
-                <ThumbsUp className="w-4 h-4" /> Helpful
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <Button variant="outline" className="w-full mt-4 h-12 rounded-xl text-foreground font-semibold">
-        Show All {count} Reviews
-      </Button>
-    </div>
+                {review.title && <h5 className="font-semibold mb-1 text-foreground">{review.title}</h5>}
+                {review.content && <p className="text-foreground leading-relaxed">{review.content}</p>}
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">Guests can leave a review after a genuine stay.</p>
+      )}
+    </section>
   );
 }

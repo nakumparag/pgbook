@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,14 +42,15 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, user, profile, isOwner, activeMode, setActiveMode, signOut } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   const toggleMode = () => {
     if (activeMode === 'user') {
       setActiveMode('owner');
-      window.location.href = '/owner/dashboard';
+      router.push('/owner/dashboard');
     } else {
       setActiveMode('user');
-      window.location.href = '/dashboard';
+      router.push('/dashboard');
     }
   };
 

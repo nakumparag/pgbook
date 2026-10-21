@@ -53,7 +53,7 @@ export default function TermsPage() {
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">9. Contact</h2>
           <p>
-            If you have any questions about these Terms, please contact us at <a href="mailto:legal@pgbook.com" className="text-primary hover:underline">legal@pgbook.com</a>.
+            If you have any questions about these Terms, please use the contact options on our <a href="/contact" className="text-primary hover:underline">Contact page</a>.
           </p>
         </div>
       </div>

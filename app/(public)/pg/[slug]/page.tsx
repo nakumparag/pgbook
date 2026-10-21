@@ -7,9 +7,8 @@ import { ReviewSection } from "@/components/pg/ReviewSection";
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { VisitTracker } from "@/components/pg/VisitTracker";
-import { SAMPLE_PGS, getSamplePGBySlug } from "@/lib/sample-pgs";
+import { siteUrl } from "@/lib/site";
 
 interface PGDetailProps {
   params: Promise<{ slug: string }>;
@@ -29,55 +28,25 @@ async function getPGBySlug(slug: string) {
         profiles:owner_id ( phone )
       `)
       .eq("slug", slug)
+      .eq("status", "APPROVED")
       .maybeSingle();
 
-    if (data && !error) return data;
+    if (error || !data) return null;
+
+    const { data: reviews } = await supabase
+      .from("reviews")
+      .select("id, rating, title, content, created_at, profiles:user_id(full_name, avatar_url)")
+      .eq("pg_id", data.id)
+      .order("created_at", { ascending: false });
+    const reviewRows = reviews || [];
+    const averageRating = reviewRows.length
+      ? reviewRows.reduce((sum, review) => sum + review.rating, 0) / reviewRows.length
+      : 0;
+
+    return { ...data, reviews: reviewRows, rating: averageRating, review_count: reviewRows.length };
   } catch {
-    // If Supabase fetch fails, fallback to sample
+    return null;
   }
-
-  // Fallback to sample PGs for demo/testing
-  const sample = getSamplePGBySlug(slug);
-  if (sample) {
-    return {
-      id: sample.id,
-      slug: sample.slug,
-      name: sample.name,
-      description: sample.description,
-      address: sample.address,
-      gender: sample.gender || "UNISEX",
-      rating: sample.rating || 4.5,
-      review_count: sample.review_count || 12,
-      status: sample.status || "APPROVED",
-      is_verified: sample.is_verified ?? true,
-      owner_id: sample.owner_id || "sample-owner",
-      available_from: sample.available_from,
-      rules: [
-        "Gate closes at 10:30 PM",
-        "Visitors allowed in common area till 8 PM",
-        "Smoking & alcohol strictly prohibited on premises",
-        "Maintain quiet hours between 11 PM and 6 AM"
-      ],
-      cities: sample.cities,
-      localities: sample.localities,
-      rooms: (sample.rooms || []).map((r: any, idx: number) => ({
-        id: `sample-room-${idx}`,
-        room_type: r.room_type,
-        rent: r.rent,
-        total_beds: r.room_type === "SINGLE" ? 1 : r.room_type === "2_SHARING" ? 2 : r.room_type === "3_SHARING" ? 3 : 4,
-        occupied_beds: 1,
-        security_deposit: r.rent * 2,
-        electricity_charges: 500,
-        maintenance_charges: 300,
-        other_charges: 0,
-      })),
-      pg_images: sample.pg_images || [],
-      pg_amenities: sample.pg_amenities || [],
-      profiles: { phone: sample.contact_phone || "9876543210" },
-    };
-  }
-
-  return null;
 }
 
 export async function generateMetadata({ params }: PGDetailProps): Promise<Metadata> {
@@ -106,7 +75,7 @@ export async function generateMetadata({ params }: PGDetailProps): Promise<Metad
     openGraph: {
       title,
       description,
-      url: `https://pgbook.in/pg/${pg.slug}`,
+      url: `${siteUrl}/pg/${pg.slug}`,
       siteName: "PGBook",
       type: "website",
       images: primaryImage ? [{ url: primaryImage, alt: pg.name }] : [],
@@ -118,24 +87,14 @@ export async function generateMetadata({ params }: PGDetailProps): Promise<Metad
       images: primaryImage ? [primaryImage] : [],
     },
     alternates: {
-      canonical: `https://pgbook.in/pg/${pg.slug}`,
+      canonical: `${siteUrl}/pg/${pg.slug}`,
     },
   };
 }
 
 export async function generateStaticParams() {
-  try {
-    const supabase = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!
-    );
-    const { data } = await supabase.from("pgs").select("slug").eq("status", "APPROVED");
-    const dbSlugs = (data || []).map((pg) => ({ slug: pg.slug }));
-    const sampleSlugs = SAMPLE_PGS.map((p) => ({ slug: p.slug }));
-    return [...sampleSlugs, ...dbSlugs];
-  } catch {
-    return SAMPLE_PGS.map((p) => ({ slug: p.slug }));
-  }
+  // Keep listing pages dynamic so new approved PGs are available without a rebuild.
+  return [];
 }
 
 export default async function PGDetail({ params }: PGDetailProps) {
@@ -372,7 +331,7 @@ export default async function PGDetail({ params }: PGDetailProps) {
 
           {/* Reviews */}
           <section>
-            <ReviewSection pgId={pg.id} rating={pg.rating || 0} count={pg.review_count || 0} />
+            <ReviewSection rating={pg.rating || 0} reviews={pg.reviews || []} />
           </section>
         </div>
 

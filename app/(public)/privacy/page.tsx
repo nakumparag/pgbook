@@ -25,7 +25,7 @@ export default function PrivacyPage() {
           <ul className="list-disc pl-6 space-y-2 mb-6">
             <li>Provide, maintain, and improve our discovery platform.</li>
             <li>Verify properties and user identities to ensure safety.</li>
-            <li>Communicate with you regarding bookings, inquiries, and platform updates.</li>
+            <li>Communicate with you regarding owner inquiries and platform updates.</li>
           </ul>
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">3. Cookies</h2>
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">7. Contact</h2>
           <p>
-            If you have any questions about this Privacy Policy, please contact us at <a href="mailto:privacy@pgbook.com" className="text-primary hover:underline">privacy@pgbook.com</a>.
+            If you have questions about this Privacy Policy, please use the contact options on our <a href="/contact" className="text-primary hover:underline">Contact page</a>.
           </p>
         </div>
       </div>

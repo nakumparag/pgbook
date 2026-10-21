@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
                   name="email"
                   required 
                   className="pl-11 py-6 rounded-xl bg-zinc-950/50 border-zinc-800 text-white focus-visible:ring-primary focus-visible:border-primary placeholder:text-zinc-600 transition-all" 
-                  placeholder="admin@pgbook.com"
+                  placeholder="you@example.com"
                 />
               </div>
             </div>

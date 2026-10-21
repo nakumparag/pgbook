@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { User as AuthUser, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/types/database.types";
@@ -22,6 +23,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -53,7 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: userId,
               full_name: userMeta.full_name || null,
               avatar_url: userMeta.avatar_url || null,
-              role: (userMeta.role === "ADMIN" ? "ADMIN" : userMeta.role === "OWNER" ? "OWNER" : "USER") as UserRole,
+              // Client-editable user metadata must never grant privileged roles.
+              role: "USER" as UserRole,
               phone: userMeta.phone || null,
             },
             { onConflict: "id" }
@@ -152,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       setSession(null);
       setIsOwner(false);
-      window.location.href = "/login";
+      router.replace("/login");
     }
   };
 

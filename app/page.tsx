@@ -15,11 +15,11 @@ import { PopularLocalities } from "@/components/home/PopularLocalities";
 import { WhyPGBook } from "@/components/home/WhyChooseUs";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { TrustAndSafety } from "@/components/home/TrustAndSafety";
-import { Testimonials } from "@/components/home/Testimonials";
 import { BecomeOwner } from "@/components/home/BecomeOwner";
 import { FAQ } from "@/components/home/FAQ";
 import { SEOContent } from "@/components/home/SEOContent";
 import { createClient } from "@/lib/supabase/server";
+import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "PGBook — Find PGs in Ahmedabad, Surat & Gujarat | Discover. Compare. Stay.",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     title: "PGBook — Find PGs in Gujarat | Discover. Compare. Stay.",
     description:
       "Search verified PGs across Gujarat by location, budget, room type and amenities. No broker, no commission.",
-    url: "https://pgbook.in",
+    url: siteUrl,
     siteName: "PGBook",
     type: "website",
   },
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     description: "Search verified PGs across Gujarat by location, budget, room type and amenities.",
   },
   alternates: {
-    canonical: "https://pgbook.in",
+    canonical: siteUrl,
   },
 };
 
@@ -101,9 +101,6 @@ export default async function HomePage() {
 
       {/* 20. Trust & Safety */}
       <TrustAndSafety />
-
-      {/* 21. Testimonials */}
-      <Testimonials />
 
       {/* 22. Become an Owner */}
       <BecomeOwner />

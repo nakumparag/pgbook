@@ -2,6 +2,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import ExploreContent from "./ExploreContent";
+import { siteUrl } from "@/lib/site";
 
 interface ExplorePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -34,7 +35,7 @@ export async function generateMetadata({ searchParams }: ExplorePageProps): Prom
     openGraph: {
       title,
       description,
-      url: `https://pgbook.in/explore${city ? `?city=${city}` : ""}`,
+      url: `${siteUrl}/explore${city ? `?city=${encodeURIComponent(city)}` : ""}`,
       siteName: "PGBook",
       type: "website",
     },
@@ -44,7 +45,7 @@ export async function generateMetadata({ searchParams }: ExplorePageProps): Prom
       description,
     },
     alternates: {
-      canonical: `https://pgbook.in/explore${city ? `?city=${city}` : ""}`,
+      canonical: `${siteUrl}/explore${city ? `?city=${encodeURIComponent(city)}` : ""}`,
     },
   };
 }

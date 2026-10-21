@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/hooks/useAuth";
+import { siteUrl } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -20,6 +21,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "PGBook — Discover. Compare. Stay.",
   description: "Find PGs based on location, budget, room sharing, food and amenities.",
 };

@@ -9,7 +9,6 @@ import { PGCard, SupabasePGListing } from "@/components/pg/PGCard";
 import { SearchFilters, ActiveFilters } from "@/components/search/SearchFilters";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { SAMPLE_PGS } from "@/lib/sample-pgs";
 
 const SORT_OPTIONS = [
   { value: "recommended", label: "Recommended" },
@@ -40,8 +39,9 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
   const urlSearchParams = useSearchParams();
   const supabase = createClient();
 
-  const [realListings, setRealListings] = useState<any[]>(SAMPLE_PGS);
+  const [realListings, setRealListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   // Read all URL params
   const cityQuery = (resolvedParams.city as string) || "";
@@ -71,6 +71,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
   useEffect(() => {
     async function fetchListings() {
       setLoading(true);
+      setLoadError(false);
       try {
         const { data, error } = await supabase
           .from("pgs")
@@ -81,15 +82,11 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
           `)
           .eq("status", "APPROVED");
 
-        if (!error && data && data.length > 0) {
-          const realSlugs = new Set(data.map((d: any) => d.slug));
-          const nonDuplicateSamples = SAMPLE_PGS.filter((s) => !realSlugs.has(s.slug));
-          setRealListings([...data, ...nonDuplicateSamples]);
-        } else {
-          setRealListings(SAMPLE_PGS);
-        }
+        if (error) throw error;
+        setRealListings(data || []);
       } catch {
-        setRealListings(SAMPLE_PGS);
+        setRealListings([]);
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -339,7 +336,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
             <div>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2">{heading}</h1>
               <p className="text-muted-foreground text-base">
-                {loading ? "Searching..." : `${sortedListings.length} verified ${sortedListings.length === 1 ? "stay" : "stays"} found`}
+                {loading ? "Searching..." : `${sortedListings.length} ${sortedListings.length === 1 ? "stay" : "stays"} found`}
               </p>
             </div>
 
@@ -421,15 +418,21 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
                   <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center shadow-sm border border-border mb-5">
                     <Search className="w-8 h-8 text-muted-foreground/60" aria-hidden="true" />
                   </div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">No properties match your search</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-2">
+                    {loadError ? "We couldn't load PGs" : realListings.length === 0 ? "No PGs listed yet" : "No properties match your search"}
+                  </h3>
                   <p className="text-muted-foreground text-sm max-w-sm mb-6">
-                    We couldn't find any PGs that match your current filters. Try adjusting your search criteria or looking in a different area.
+                    {loadError
+                      ? "Please try again in a moment."
+                      : realListings.length === 0
+                        ? "Approved PG listings will appear here. You can also list a PG for review."
+                        : "We couldn't find any PGs that match your current filters. Try adjusting your search criteria or looking in a different area."}
                   </p>
                   <Button
-                    onClick={() => router.push("/explore")}
+                    onClick={() => router.push(realListings.length === 0 ? "/become-owner" : "/explore")}
                     className="rounded-xl px-6"
                   >
-                    Clear all filters
+                    {realListings.length === 0 ? "List your PG" : "Clear all filters"}
                   </Button>
                 </div>
               )}
