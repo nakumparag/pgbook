@@ -25,6 +25,11 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
       };
     }
 
+    const { data: profile } = await supabase.from("profiles").select("role, id_verified").eq("id", user.id).maybeSingle();
+    if (!profile || (profile.role !== "ADMIN" && (profile.role !== "OWNER" || !profile.id_verified))) {
+      return { success: false, error: "Complete owner verification before submitting a PG." };
+    }
+
     // 2. Extract and Validate Form Data
     const name = (formData.get("name") as string || "").trim();
     const cityIdInput = (formData.get("cityId") as string || "").trim();
@@ -171,7 +176,8 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
     const uniqueSuffix = Math.random().toString(36).substring(2, 6);
     const slug = `${baseSlug}-${uniqueSuffix}`;
 
-    // 6. Insert PG record (Default to PENDING per MVP moderation architecture)
+    // Create the listing as a draft; the checked database transition below
+    // moves it to PENDING after all of the submitted data has been saved.
     const { data: pg, error: pgError } = await supabase
       .from("pgs")
       .insert({
@@ -181,13 +187,11 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
         name,
         slug,
         address: `${localityNameInput ? localityNameInput + ", " : ""}${address}`,
-        monthly_rent_from: rent,
-        monthly_rent_to: rent,
         gender: "CO_LIVING", // Valid enum value
         food_status: foodAvailable ? "AVAILABLE" : "NOT_AVAILABLE",
-        status: "PENDING",
-        is_verified: false,
-        contact_phone: contactPhone,
+        status: "DRAFT",
+        monthly_rent_from: rent,
+        monthly_rent_to: rent,
         description: description || null
       })
       .select("id, slug")
@@ -218,7 +222,7 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
         pg_id: pg.id,
         room_type: mappedRoomType,
         rent,
-        security_deposit: rent,
+        security_deposit: null,
         total_beds: bedsCount,
         occupied_beds: 0,
         food_available: foodAvailable,
@@ -262,6 +266,9 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
       for (let i = 0; i < Math.min(photoFiles.length, 5); i++) {
         const file = photoFiles[i];
         if (!file || file.size === 0) continue;
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+          return { success: false, error: "Photos must be JPG, PNG, or WEBP files under 5 MB." };
+        }
 
         try {
           const fileExt = file.name.split(".").pop() || "jpg";
@@ -271,6 +278,7 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
             .from("pg-images")
             .upload(fileName, file, {
               cacheControl: "3600",
+              contentType: file.type,
               upsert: true
             });
 
@@ -310,7 +318,17 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
       }
     }
 
-    // 10. Register Approval Request for Admin Moderation
+    // 10. Submit the completed draft through the server-checked status change.
+    const { error: submitError } = await supabase.rpc("owner_set_pg_status", {
+      target_pg_id: pg.id,
+      target_status: "PENDING" as const,
+    });
+    if (submitError) {
+      console.error("Failed to submit PG for review:", submitError.code);
+      return { success: false, error: "Your PG was saved as a draft, but could not be submitted for review. Please contact support." };
+    }
+
+    // 11. Register Approval Request for Admin Moderation
     try {
       await supabase.from("approval_requests").insert({
         owner_id: user.id,

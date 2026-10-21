@@ -20,8 +20,8 @@ export type FoodStatus = 'AVAILABLE' | 'NOT_AVAILABLE' | 'INCLUDED'
 export type RoomTypeEnum = 'PERSONAL' | '2_SHARING' | '3_SHARING' | '4_SHARING' | '5_SHARING' | '6_SHARING' | '7_SHARING'
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED'
 export type RoomAvailability = 'AVAILABLE' | 'LIMITED' | 'FULL' | 'UNAVAILABLE'
-export type ContactType = 'WHATSAPP' | 'CALL' | 'CALLBACK'
-export type InquiryStatus = 'NEW' | 'CONTACTED' | 'CLOSED'
+export type ContactType = 'WHATSAPP' | 'CALL' | 'CALLBACK' | 'IN_APP'
+export type InquiryStatus = 'NEW' | 'CONTACTED' | 'INTERESTED' | 'CLOSED' | 'CANCELLED'
 export type OwnerVerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CHANGES_REQUESTED'
 
 export interface Database {
@@ -451,7 +451,7 @@ export interface Database {
           pg_id: string
           room_type: RoomTypeEnum
           rent: number
-          security_deposit: number
+          security_deposit: number | null
           total_beds: number
           occupied_beds: number
           available_beds: number  // generated column
@@ -468,7 +468,7 @@ export interface Database {
           pg_id: string
           room_type: RoomTypeEnum
           rent: number
-          security_deposit: number
+          security_deposit?: number | null
           total_beds: number
           occupied_beds?: number
           food_available?: boolean | null
@@ -483,7 +483,7 @@ export interface Database {
           pg_id?: string
           room_type?: RoomTypeEnum
           rent?: number
-          security_deposit?: number
+          security_deposit?: number | null
           total_beds?: number
           occupied_beds?: number
           food_available?: boolean | null
@@ -694,6 +694,10 @@ export interface Database {
           rating: number
           title: string | null
           content: string | null
+          status: 'PUBLISHED' | 'HIDDEN'
+          display_name: string | null
+          moderated_at: string | null
+          moderation_note: string | null
           created_at: string
           updated_at: string | null
         }
@@ -704,6 +708,10 @@ export interface Database {
           rating: number
           title?: string | null
           content?: string | null
+          status?: 'PUBLISHED' | 'HIDDEN'
+          display_name?: string | null
+          moderated_at?: string | null
+          moderation_note?: string | null
           created_at?: string
           updated_at?: string | null
         }
@@ -711,6 +719,9 @@ export interface Database {
           rating?: number
           title?: string | null
           content?: string | null
+          status?: 'PUBLISHED' | 'HIDDEN'
+          moderated_at?: string | null
+          moderation_note?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -892,7 +903,7 @@ export interface Database {
           user_id: string | null
           owner_id: string
           name: string
-          phone: string
+          phone: string | null
           contact_type: ContactType
           preferred_time: string | null
           message: string | null
@@ -904,10 +915,10 @@ export interface Database {
           id?: string
           pg_id: string
           user_id?: string | null
-          owner_id: string
-          name: string
-          phone: string
-          contact_type: ContactType
+          owner_id?: string
+          name?: string
+          phone?: string | null
+          contact_type?: ContactType
           preferred_time?: string | null
           message?: string | null
           status?: InquiryStatus
@@ -919,7 +930,7 @@ export interface Database {
           user_id?: string | null
           owner_id?: string
           name?: string
-          phone?: string
+          phone?: string | null
           contact_type?: ContactType
           preferred_time?: string | null
           message?: string | null
@@ -947,6 +958,50 @@ export interface Database {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      // ── review_reports ───────────────────────────────────
+      review_reports: {
+        Row: {
+          id: string
+          review_id: string
+          reporter_id: string
+          reason: 'SPAM' | 'ABUSE' | 'NOT_RELEVANT' | 'OTHER'
+          details: string | null
+          status: 'OPEN' | 'REVIEWED' | 'DISMISSED'
+          created_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          review_id: string
+          reporter_id: string
+          reason: 'SPAM' | 'ABUSE' | 'NOT_RELEVANT' | 'OTHER'
+          details?: string | null
+          status?: 'OPEN' | 'REVIEWED' | 'DISMISSED'
+          created_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          status?: 'OPEN' | 'REVIEWED' | 'DISMISSED'
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'review_reports_review_id_fkey'
+            columns: ['review_id']
+            isOneToOne: false
+            referencedRelation: 'reviews'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'review_reports_reporter_id_fkey'
+            columns: ['reporter_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
           }
         ]
       }
@@ -1139,7 +1194,14 @@ export interface Database {
     }
 
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      owner_set_pg_status: { Args: { target_pg_id: string; target_status: PgStatus }; Returns: boolean }
+      admin_set_pg_status: { Args: { target_pg_id: string; target_status: PgStatus }; Returns: boolean }
+      admin_set_pg_verified: { Args: { target_pg_id: string; verified: boolean }; Returns: boolean }
+      admin_set_review_status: { Args: { target_review_id: string; target_status: string; note?: string | null }; Returns: boolean }
+      admin_set_owner_profile: { Args: { target_user_id: string; approve: boolean }; Returns: boolean }
+      admin_set_profile_verified: { Args: { target_user_id: string; verified: boolean }; Returns: boolean }
+    }
     Enums: {
       user_role: UserRole
       pg_status: PgStatus

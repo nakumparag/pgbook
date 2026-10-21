@@ -355,6 +355,7 @@ export default function ListPgForm() {
       {error && (
         <div className="mb-8 p-4 bg-destructive/10 text-destructive rounded-2xl text-sm font-medium border border-destructive/20">
           {error}
+          {error.includes("owner verification") && <Link href="/become-owner/verification" className="ml-2 underline underline-offset-2">Complete verification</Link>}
         </div>
       )}
 
@@ -605,7 +606,7 @@ export default function ListPgForm() {
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Prospective tenants will call or WhatsApp this number for inquiries.
+            This number is saved to your owner profile. Interested users contact you through PGBook inquiries.
           </p>
         </div>
 

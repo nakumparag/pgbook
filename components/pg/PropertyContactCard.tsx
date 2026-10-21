@@ -1,11 +1,11 @@
 "use client";
 
-import { ShieldCheck } from "lucide-react";
 import { ContactOwnerModal } from "./ContactOwnerModal";
 
 export function PropertyContactCard({ pg }: { pg: any }) {
   const rentMin = pg.rooms?.length > 0 ? Math.min(...pg.rooms.map((r: any) => r.rent)) : 0;
   const rentMax = pg.rooms?.length > 0 ? Math.max(...pg.rooms.map((r: any) => r.rent)) : 0;
+  const deposits = (pg.rooms || []).map((room: any) => room.security_deposit).filter((value: number | null) => typeof value === "number");
 
   return (
     <div className="sticky top-28 bg-card border border-border rounded-2xl p-6 shadow-xl">
@@ -22,30 +22,17 @@ export function PropertyContactCard({ pg }: { pg: any }) {
         <p className="text-sm text-success font-medium">Best available price</p>
       </div>
 
-      <div className="space-y-4 mb-6 pt-6 border-t border-border">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Security Deposit</span>
-          <span className="font-semibold text-foreground">1 Month Rent</span>
+      {deposits.length > 0 && (
+        <div className="mb-6 flex justify-between border-t border-border pt-6 text-sm">
+          <span className="text-muted-foreground">Security deposit</span>
+          <span className="font-semibold text-foreground">₹{Math.min(...deposits).toLocaleString()}{Math.max(...deposits) > Math.min(...deposits) ? `–₹${Math.max(...deposits).toLocaleString()}` : ""}</span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Brokerage</span>
-          <span className="font-semibold text-success flex items-center gap-1">
-            <ShieldCheck className="w-4 h-4" /> Zero Brokerage
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Notice Period</span>
-          <span className="font-semibold text-foreground">30 Days</span>
-        </div>
-      </div>
+      )}
 
       <ContactOwnerModal 
         pgId={pg.id}
-        ownerId={pg.owner_id}
         pgName={pg.name}
-        contactPhone={(pg.profiles as any)?.phone || null}
-        whatsappNumber={(pg.profiles as any)?.phone || null}
-        locality={(pg.localities as any)?.name || ""}
+        returnTo={`/pg/${pg.slug}`}
       />
 
     </div>

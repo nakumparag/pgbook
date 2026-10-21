@@ -78,7 +78,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
         const { data, error } = await supabase
           .from("pgs")
           .select(`
-            id, slug, name, address, gender, status, is_verified, rating, review_count, description, created_at, monthly_rent_from, monthly_rent_to, contact_phone,
+          id, slug, name, address, gender, status, is_verified, rating, review_count, description, created_at, monthly_rent_from, monthly_rent_to,
             cities ( name ), localities ( name ), rooms ( rent, room_type ),
             pg_images ( url, is_primary ), pg_amenities ( amenities ( name, icon, category ) )
           `)

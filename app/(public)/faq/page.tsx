@@ -54,12 +54,16 @@ const faqs = [
         a: "Yes, authenticated users can click the heart icon on any PG card to save it to their 'Favorites' for easy access later."
       },
       {
-        q: "How do I arrange a visit?",
-        a: "Open a PG listing and contact the owner by WhatsApp or phone to ask questions and arrange a visit directly."
+        q: "How do I ask an owner about a PG?",
+        a: "Sign in, open a PG listing, and use Contact Owner to send an in-app inquiry. You can follow its status from your dashboard. This does not book a room or a visit."
       },
       {
         q: "How do I contact an owner?",
-        a: "Open the PG listing and choose Contact Owner to reach them by WhatsApp or phone."
+        a: "Open the PG listing and choose Contact Owner. Your profile name and phone number are shared with that PG owner so they can respond."
+      },
+      {
+        q: "Can I review a PG?",
+        a: "Sign in to leave one rating and written review per PG. Reviews are user-submitted and PGBook does not verify stays."
       }
     ]
   },
@@ -68,16 +72,16 @@ const faqs = [
     questions: [
       {
         q: "Does PGBook guarantee a listing?",
-        a: "No. Admin review is not an on-site inspection or a guarantee of safety, condition, or accuracy. Contact the owner, confirm details, and inspect the property before paying."
+        a: "No. Admin review is not an on-site inspection or a guarantee of safety, condition, or accuracy. Confirm details and inspect the property before making any decision."
       },
     ]
   },
   {
-    category: "Payments",
+    category: "Bookings and payments",
     questions: [
       {
         q: "Does PGBook handle rent payments?",
-        a: "Currently, PGBook operates purely as a discovery platform. All financial transactions, including rent and security deposits, are handled directly between you and the property owner. In the future, we plan to introduce secure online rent payments."
+        a: "PGBook is a discovery and inquiry platform. It does not take bookings, deposits, rent, or other payments. Any rental agreement or payment is arranged directly between you and the property owner."
       }
     ]
   }

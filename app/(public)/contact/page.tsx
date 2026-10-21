@@ -19,7 +19,7 @@ export default function ContactPage() {
           </div>
           <h2 className="mb-2 text-xl font-bold text-foreground">Ask about a PG</h2>
           <p className="mb-6 text-sm leading-6 text-muted-foreground">
-            Open a listing and contact its owner directly by phone or WhatsApp. PGBook does not take bookings or payments.
+            Open a listing and send an in-app inquiry to its owner. PGBook does not take bookings or payments.
           </p>
           <Button asChild className="w-full rounded-xl">
             <Link href="/explore">Explore PGs <ArrowRight className="ml-2 h-4 w-4" /></Link>
@@ -41,7 +41,7 @@ export default function ContactPage() {
       </div>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        Privacy and legal contact email is not configured yet. Please set a support email before inviting users to send account or privacy requests.
+        For listing questions, send an inquiry from that PG's page. For account access, use the password reset link above.
       </p>
     </div>
   );

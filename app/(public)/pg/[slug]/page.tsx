@@ -26,8 +26,7 @@ async function getPGBySlug(slug: string) {
         cities ( name ), localities ( name ),
         rooms ( id, room_type, rent, total_beds, occupied_beds, security_deposit, electricity_charges, maintenance_charges, other_charges ),
         pg_images ( url, is_primary, category ),
-        pg_amenities ( amenities ( id, name, icon, category ) ),
-        profiles:owner_id ( phone )
+        pg_amenities ( amenities ( id, name, icon, category ) )
       `)
       .eq("slug", slug)
       .eq("status", "APPROVED")
@@ -37,15 +36,15 @@ async function getPGBySlug(slug: string) {
 
     const { data: reviews } = await supabase
       .from("reviews")
-      .select("id, rating, title, content, created_at, profiles:user_id(full_name, avatar_url)")
+      .select("id, user_id, rating, title, content, display_name, created_at")
       .eq("pg_id", data.id)
-      .order("created_at", { ascending: false });
+      .eq("status", "PUBLISHED")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(10);
     const reviewRows = reviews || [];
-    const averageRating = reviewRows.length
-      ? reviewRows.reduce((sum, review) => sum + review.rating, 0) / reviewRows.length
-      : 0;
 
-    return { ...data, reviews: reviewRows, rating: averageRating, review_count: reviewRows.length };
+    return { ...data, reviews: reviewRows };
   } catch {
     return null;
   }
@@ -101,6 +100,12 @@ export default async function PGDetail({ params }: PGDetailProps) {
   if (!pg) {
     notFound();
   }
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: ownReview } = user
+    ? await supabase.from("reviews").select("id, rating, title, content, status").eq("pg_id", pg.id).eq("user_id", user.id).maybeSingle()
+    : { data: null };
 
   const cityName = (pg.cities as any)?.name || "";
   const areaName = (pg.localities as any)?.name || "";
@@ -328,7 +333,16 @@ export default async function PGDetail({ params }: PGDetailProps) {
 
           {/* Reviews */}
           <section>
-            <ReviewSection rating={pg.rating || 0} reviews={pg.reviews || []} />
+            <ReviewSection
+              pgId={pg.id}
+              pgSlug={pg.slug}
+              rating={Number(pg.rating) || 0}
+              reviewCount={pg.review_count || 0}
+              reviews={pg.reviews || []}
+              userId={user?.id || null}
+              ownReview={ownReview}
+              hasMore={(pg.review_count || 0) > (pg.reviews?.length || 0)}
+            />
           </section>
         </div>
 

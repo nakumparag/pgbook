@@ -334,7 +334,7 @@ export async function submitForVerification(pgId: string) {
   const { count: roomCount } = await supabase.from("rooms").select("*", { count: "exact", head: true }).eq("pg_id", pgId);
   if (!roomCount || roomCount === 0) return { success: false, error: "At least one room configuration is required." };
 
-  const { error: updateError } = await supabase.from("pgs").update({ status: "PENDING" }).eq("id", pgId);
+  const { error: updateError } = await supabase.rpc("owner_set_pg_status", { target_pg_id: pgId, target_status: "PENDING" });
   if (updateError) {
     console.error("Failed to submit:", updateError);
     return { success: false, error: "Failed to submit for verification." };
@@ -365,7 +365,7 @@ export async function pausePgListing(pgId: string) {
   const pg = await verifyPgOwnership(supabase, user.id, pgId);
   if (!pg) return { success: false, error: "PG not found or unauthorized" };
 
-  const { error: updateError } = await supabase.from("pgs").update({ status: "SUSPENDED" }).eq("id", pgId);
+  const { error: updateError } = await supabase.rpc("owner_set_pg_status", { target_pg_id: pgId, target_status: "SUSPENDED" });
   if (updateError) return { success: false, error: "Failed to pause listing." };
 
   revalidatePath("/owner/dashboard");
@@ -381,7 +381,7 @@ export async function deletePgListing(pgId: string) {
   if (!pg) return { success: false, error: "PG not found or unauthorized" };
 
   // Soft delete by archiving
-  const { error: updateError } = await supabase.from("pgs").update({ status: "ARCHIVED" }).eq("id", pgId);
+  const { error: updateError } = await supabase.rpc("owner_set_pg_status", { target_pg_id: pgId, target_status: "ARCHIVED" });
   if (updateError) return { success: false, error: "Failed to delete listing." };
 
   revalidatePath("/owner/dashboard");

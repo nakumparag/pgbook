@@ -22,7 +22,7 @@ const SAFETY_TIPS = [
   {
     icon: Eye,
     title: "Check Reviews",
-    description: "Read reviews from previous tenants to get an honest picture of the PG experience.",
+    description: "Read community reviews. PGBook does not verify a reviewer's stay.",
   },
   {
     icon: Star,
@@ -32,7 +32,7 @@ const SAFETY_TIPS = [
   {
     icon: Phone,
     title: "Contact the Owner",
-    description: "Use the phone or WhatsApp details on a listing to confirm information and arrange a visit.",
+    description: "Send an in-app inquiry and confirm the listing details directly with its owner.",
   },
 ];
 

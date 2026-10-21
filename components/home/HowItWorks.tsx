@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, Phone } from "lucide-react";
+import { Search, SlidersHorizontal, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 
 const STEPS = [
@@ -22,9 +22,9 @@ const STEPS = [
   },
   {
     number: "03",
-    icon: Phone,
-    title: "Contact the Owner",
-    description: "Ask questions directly by WhatsApp or phone and arrange a visit with the owner.",
+    icon: MessageSquare,
+    title: "Send an Inquiry",
+    description: "Ask the owner about availability and property details through your PGBook account.",
     color: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/30",
   },
@@ -41,7 +41,7 @@ export function HowItWorks() {
             How PGBook Works
           </h2>
           <p className="section-subtext">
-            Search, save listings, and contact the owner directly.
+            Search, save listings, and keep your owner inquiries in one place.
           </p>
         </div>
 

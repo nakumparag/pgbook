@@ -22,13 +22,7 @@ export async function updatePgStatus(pgId: string, status: "APPROVED" | "REJECTE
     if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
   }
 
-  const updateData: any = { status };
-  if (status === "APPROVED") {
-    updateData.is_verified = true;
-    updateData.verified_at = new Date().toISOString();
-  }
-
-  const { error } = await supabase.from("pgs").update(updateData).eq("id", pgId);
+  const { error } = await supabase.rpc("admin_set_pg_status", { target_pg_id: pgId, target_status: status });
 
   if (error) {
     console.error("Failed to update PG status:", error);
@@ -49,7 +43,7 @@ export async function verifyOwnerId(ownerId: string, verify: boolean = true) {
     if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
   }
 
-  const { error } = await supabase.from("profiles").update({ id_verified: verify }).eq("id", ownerId);
+  const { error } = await supabase.rpc("admin_set_profile_verified", { target_user_id: ownerId, verified: verify });
   if (error) return { success: false, error: "Failed to update owner." };
 
   revalidatePath("/admin/dashboard");
@@ -66,7 +60,7 @@ export async function verifyProperty(pgId: string, verify: boolean = true) {
     if (profile?.role !== "ADMIN") return { success: false, error: "Unauthorized" };
   }
 
-  const { error } = await supabase.from("pgs").update({ is_verified: verify }).eq("id", pgId);
+  const { error } = await supabase.rpc("admin_set_pg_verified", { target_pg_id: pgId, verified: verify });
   if (error) return { success: false, error: "Failed to update property." };
 
   revalidatePath("/admin/dashboard");
@@ -93,10 +87,10 @@ export async function resolveApprovalRequest(requestId: string, approve: boolean
     if (req.request_type === 'OWNER') {
       const { error: ownerError } = await supabase.from("owner_profiles").update({ status: "APPROVED" }).eq("user_id", req.owner_id);
       if (ownerError) return { success: false, error: "Could not approve the owner. Please retry." };
-      const { error: profileError } = await supabase.from("profiles").update({ id_verified: true, role: "OWNER" }).eq("id", req.owner_id);
+      const { error: profileError } = await supabase.rpc("admin_set_owner_profile", { target_user_id: req.owner_id, approve: true });
       if (profileError) return { success: false, error: "Owner approval was saved, but ID verification did not update. Please retry." };
     } else if (req.request_type === 'PG' && req.pg_id) {
-      const { error: pgError } = await supabase.from("pgs").update({ status: "APPROVED", is_verified: true, verified_at: new Date().toISOString() }).eq("id", req.pg_id);
+      const { error: pgError } = await supabase.rpc("admin_set_pg_status", { target_pg_id: req.pg_id, target_status: "APPROVED" });
       if (pgError) return { success: false, error: "Could not approve this PG. Please retry." };
     } else {
       return { success: false, error: "This request is missing its owner or PG record." };
@@ -106,7 +100,7 @@ export async function resolveApprovalRequest(requestId: string, approve: boolean
       const { error: ownerError } = await supabase.from("owner_profiles").update({ status: "REJECTED" }).eq("user_id", req.owner_id);
       if (ownerError) return { success: false, error: "Could not reject the owner request. Please retry." };
     } else if (req.request_type === 'PG' && req.pg_id) {
-      const { error: pgError } = await supabase.from("pgs").update({ status: "DRAFT" }).eq("id", req.pg_id);
+      const { error: pgError } = await supabase.rpc("admin_set_pg_status", { target_pg_id: req.pg_id, target_status: "DRAFT" });
       if (pgError) return { success: false, error: "Could not return this PG to draft. Please retry." };
     } else {
       return { success: false, error: "This request is missing its owner or PG record." };

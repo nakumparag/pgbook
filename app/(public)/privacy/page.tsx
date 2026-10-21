@@ -16,6 +16,7 @@ export default function PrivacyPage() {
             <li><strong>Authentication Data:</strong> Your name, email address, and authentication tokens provided by Supabase or Google Auth.</li>
             <li><strong>Profile Data:</strong> Information you choose to add to your profile, such as phone numbers, avatar images, and preferences.</li>
             <li><strong>Property Data:</strong> For PG Owners, we collect property addresses, images, pricing, and amenities.</li>
+            <li><strong>Inquiries and Reviews:</strong> Messages you send to owners, ratings, written reviews, and any reports you submit.</li>
           </ul>
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">2. How We Use Information</h2>
@@ -24,8 +25,8 @@ export default function PrivacyPage() {
           </p>
           <ul className="list-disc pl-6 space-y-2 mb-6">
             <li>Provide, maintain, and improve our discovery platform.</li>
-            <li>Verify properties and user identities to ensure safety.</li>
-            <li>Communicate with you regarding owner inquiries and platform updates.</li>
+            <li>Review submitted listings and owner applications, and moderate reported reviews.</li>
+            <li>Share your name and phone number with the owner when you send an inquiry about their PG.</li>
           </ul>
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">3. Cookies</h2>
@@ -52,7 +53,7 @@ export default function PrivacyPage() {
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">6. Data Retention and User Rights</h2>
           <p>
-            We retain your data as long as your account is active. You have the right to request access to, modification of, or deletion of your personal data at any time by contacting our support team.
+            You can update profile details from your account. Account and inquiry data is retained while needed to operate the platform and meet legal obligations. To request access to or deletion of account data, use the account support options on our Contact page.
           </p>
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">7. Contact</h2>

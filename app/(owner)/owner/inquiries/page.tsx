@@ -11,7 +11,7 @@ export default async function OwnerInquiriesPage() {
   const { data: inquiries } = await supabase
     .from("inquiries")
     .select(`
-      id, name, phone, contact_type, preferred_time, message, status, created_at,
+      id, name, phone, contact_type, message, status, created_at,
       pgs ( name )
     `)
     .eq("owner_id", user?.id || "")

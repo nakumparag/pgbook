@@ -1,4 +1,5 @@
-import { Building2, Users, AlertTriangle, ShieldCheck, XCircle } from "lucide-react";
+import { Building2, Users, AlertTriangle, ShieldCheck, XCircle, MessageSquare, Flag } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { updatePgStatus, verifyOwnerId, verifyProperty, resolveApprovalRequest } from "@/app/actions/admin";
@@ -47,10 +48,12 @@ export default async function AdminDashboard() {
     .limit(20);
 
   // Quick stats queries
-  const [{ count: totalPGs }, { count: totalUsers }, { count: totalOwners }] = await Promise.all([
+  const [{ count: totalPGs }, { count: totalUsers }, { count: totalOwners }, { count: totalInquiries }, { count: openReports }] = await Promise.all([
     supabase.from("pgs").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "OWNER")
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "OWNER"),
+    supabase.from("inquiries").select("id", { count: "exact", head: true }),
+    supabase.from("review_reports").select("id", { count: "exact", head: true }).eq("status", "OPEN"),
   ]);
 
   return (
@@ -60,7 +63,7 @@ export default async function AdminDashboard() {
         <p className="text-muted-foreground font-medium text-lg">Platform overview and pending approvals.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-card rounded-3xl p-6 shadow-sm border border-border flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
@@ -101,7 +104,12 @@ export default async function AdminDashboard() {
           </div>
           <p className="text-3xl font-heading font-black mt-2 text-foreground">{totalOwners || 0}</p>
         </div>
+
+        <div className="bg-card rounded-3xl p-6 shadow-sm border border-border flex flex-col justify-center"><div className="flex items-center gap-3 mb-2"><div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600"><MessageSquare className="w-6 h-6" /></div><p className="text-sm text-muted-foreground font-semibold">Inquiries</p></div><p className="text-3xl font-heading font-black mt-2 text-foreground">{totalInquiries || 0}</p></div>
+        <div className="bg-card rounded-3xl p-6 shadow-sm border border-border flex flex-col justify-center"><div className="flex items-center gap-3 mb-2"><div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600"><Flag className="w-6 h-6" /></div><p className="text-sm text-muted-foreground font-semibold">Open Review Reports</p></div><p className="text-3xl font-heading font-black mt-2 text-foreground">{openReports || 0}</p></div>
       </div>
+
+      <div className="mb-10 flex flex-wrap gap-3"><Link href="/admin/inquiries" className="btn btn-primary">Manage inquiries</Link><Link href="/admin/reviews" className="btn btn-outline">Review reports & moderation</Link></div>
 
       <ApprovalRequestsTable requests={approvalRequests} />
 
@@ -129,9 +137,9 @@ export default async function AdminDashboard() {
                   </td>
                   <td className="px-6 py-4 font-medium">
                     {pg.is_verified ? (
-                      <span className="text-success text-xs font-bold bg-success/10 px-2 py-1 rounded">Verified Property</span>
+                      <span className="text-success text-xs font-bold bg-success/10 px-2 py-1 rounded">PGBook Reviewed</span>
                     ) : (
-                      <span className="text-muted-foreground text-xs font-bold bg-muted px-2 py-1 rounded">Unverified Property</span>
+                      <span className="text-muted-foreground text-xs font-bold bg-muted px-2 py-1 rounded">Not reviewed</span>
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
