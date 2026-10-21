@@ -9,48 +9,73 @@ import Link from "next/link";
 
 export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingLink, setIsCheckingLink] = useState(true);
+  const [isLinkInvalid, setIsLinkInvalid] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const isSubmittingRef = useRef(false);
+  const linkCheckStartedRef = useRef(false);
   const supabase = createClient();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
+    if (linkCheckStartedRef.current) return;
+    linkCheckStartedRef.current = true;
+    let cancelled = false;
 
-      // Check URL parameters for errors
-      const errorDesc = url.searchParams.get("error_description") || url.searchParams.get("error");
-      if (errorDesc) {
-        setError(decodeURIComponent(errorDesc).replace(/\+/g, " "));
+    const checkRecoveryLink = async () => {
+      const url = new URL(window.location.href);
+      const hashParams = new URLSearchParams(url.hash.slice(1));
+      const authError =
+        url.searchParams.get("error_code") ||
+        url.searchParams.get("error") ||
+        hashParams.get("error_code") ||
+        hashParams.get("error");
+
+      if (authError) {
+        if (!cancelled) {
+          setIsLinkInvalid(true);
+          setError("This reset link has expired or was already used. Request a new link to continue.");
+          setIsCheckingLink(false);
+        }
+        url.hash = "";
+        url.searchParams.delete("error");
+        url.searchParams.delete("error_code");
+        url.searchParams.delete("error_description");
+        window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+        return;
       }
 
-      // Check hash fragment for errors (standard Supabase redirect format)
-      if (window.location.hash) {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const hashError = hashParams.get("error_description") || hashParams.get("error");
-        if (hashError) {
-          setError(decodeURIComponent(hashError).replace(/\+/g, " "));
+      const code = url.searchParams.get("code");
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          if (!cancelled) {
+            setIsLinkInvalid(true);
+            setError("This reset link has expired or was already used. Request a new link to continue.");
+          }
+        } else {
+          url.searchParams.delete("code");
+          window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
         }
       }
 
-      // If PKCE code is present directly, exchange it for session
-      const code = url.searchParams.get("code");
-      if (code) {
-        supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeErr }) => {
-          if (exchangeErr) {
-            setError("The reset link has expired or is invalid. Please request a new one.");
-          } else {
-            url.searchParams.delete("code");
-            const cleanQuery = url.searchParams.toString();
-            const cleanPath = url.pathname + (cleanQuery ? `?${cleanQuery}` : "");
-            window.history.replaceState({}, "", cleanPath);
-          }
-        });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!cancelled) {
+        if (!session) {
+          setIsLinkInvalid(true);
+          setError("Open the latest password reset email link first, then choose a new password.");
+        }
+        setIsCheckingLink(false);
       }
-    }
+    };
+
+    void checkRecoveryLink();
+    return () => {
+      cancelled = true;
+    };
   }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -80,7 +105,15 @@ export default function ResetPasswordPage() {
       });
 
       if (updateError) {
-        setError(updateError.message || "Failed to update password. The reset link may have expired.");
+        const message = updateError.message?.toLowerCase() || "";
+        if (message.includes("session") || message.includes("token") || message.includes("expired")) {
+          setPassword("");
+          setConfirmPassword("");
+          setIsLinkInvalid(true);
+          setError("This reset link has expired or was already used. Request a new link to continue.");
+        } else {
+          setError(updateError.message || "Failed to update password. Please try again.");
+        }
         return;
       }
 
@@ -112,13 +145,28 @@ export default function ResetPasswordPage() {
 
         {/* Form Card */}
         <div className="bg-card p-8 rounded-3xl shadow-xl border border-border">
-          {error && (
+          {isCheckingLink ? (
+            <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Checking reset link...
+            </div>
+          ) : isLinkInvalid ? (
+            <div className="space-y-5 text-center">
+              <div className="p-4 bg-destructive/10 text-destructive rounded-xl text-sm font-medium">
+                {error}
+              </div>
+              <Link href="/forgot-password" className="block">
+                <Button className="w-full py-6 text-base rounded-xl font-bold">Request a New Reset Link</Button>
+              </Link>
+              <p className="text-sm text-muted-foreground">Use the newest email link once, as soon as it arrives.</p>
+            </div>
+          ) : error && (
             <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-xl text-sm font-medium">
               {error}
             </div>
           )}
 
-          {isSuccess ? (
+          {!isCheckingLink && !isLinkInvalid && isSuccess ? (
             <div className="text-center space-y-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
@@ -135,7 +183,7 @@ export default function ResetPasswordPage() {
                 </Link>
               </div>
             </div>
-          ) : (
+          ) : !isCheckingLink && !isLinkInvalid ? (
             <form onSubmit={handleSubmit} method="POST" action="#" className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground ml-1">New Password</label>
@@ -183,7 +231,7 @@ export default function ResetPasswordPage() {
                 )}
               </Button>
             </form>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
