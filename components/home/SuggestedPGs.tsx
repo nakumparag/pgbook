@@ -65,7 +65,7 @@ export function SuggestedPGs({ pgs = [] }: { pgs?: any[] }) {
                   {pg.is_verified && (
                     <div className="absolute top-3 left-3">
                       <span className="badge-verified text-[10px]">
-                        <ShieldCheck className="w-3 h-3" aria-hidden="true" /> Verified
+                        <ShieldCheck className="w-3 h-3" aria-hidden="true" /> Reviewed
                       </span>
                     </div>
                   )}

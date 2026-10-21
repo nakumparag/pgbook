@@ -33,8 +33,8 @@ const faqs = [
         a: "You can click on 'Become a PG Owner' in the navigation bar, sign up as a property owner, and follow the simple 4-step wizard to add your property details, location, amenities, and photos."
       },
       {
-        q: "How does PG verification work?",
-        a: "Once you submit a listing, our team reviews the details and photos. A 'Verified' badge is added once we authenticate the property information."
+        q: "What does PGBook Reviewed mean?",
+        a: "An admin has reviewed the submitted listing details. It is not an on-site inspection or a guarantee of the property. Contact the owner and inspect the PG before paying."
       },
       {
         q: "Can I add multiple PGs?",
@@ -67,13 +67,9 @@ const faqs = [
     category: "Trust & Safety",
     questions: [
       {
-        q: "How are listings verified?",
-        a: "Listings are cross-checked by our internal team through documentation and sometimes physical verification to ensure safety and authenticity."
+        q: "Does PGBook guarantee a listing?",
+        a: "No. Admin review is not an on-site inspection or a guarantee of safety, condition, or accuracy. Contact the owner, confirm details, and inspect the property before paying."
       },
-      {
-        q: "How can I report a listing?",
-        a: "If you find inappropriate content or a fake listing, you can click the 'Report' button at the bottom of the PG details page."
-      }
     ]
   },
   {
@@ -128,7 +124,7 @@ export default function FAQPage() {
           <div className="mt-16 bg-primary/10 rounded-3xl p-8 text-center border border-primary/20">
             <h3 className="text-2xl font-bold mb-4 text-foreground">Still have questions?</h3>
             <p className="text-muted-foreground mb-6">
-              Can't find the answer you're looking for? Please chat to our friendly team.
+              Can't find the answer you're looking for? Visit the contact page for available ways to reach us.
             </p>
             <Link href="/contact">
               <Button size="lg" className="font-bold">

@@ -82,7 +82,7 @@ export default function AboutPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              "Verified PG listings",
+                "Admin-reviewed PG listings",
               "Smart search & Budget filtering",
               "Room sharing options",
               "Food / Non-Food filtering",
@@ -116,7 +116,7 @@ export default function AboutPage() {
             </div>
             <div className="p-6">
               <h3 className="text-xl font-bold mb-2">PG Owners</h3>
-              <p className="text-muted-foreground text-sm">Connecting quality properties with verified tenants.</p>
+              <p className="text-muted-foreground text-sm">Helping PG owners connect with people looking for accommodation.</p>
             </div>
           </div>
 
@@ -148,7 +148,7 @@ export default function AboutPage() {
             </Link>
           </div>
           <p className="mt-6 text-primary-foreground/80 font-medium">
-            Own a PG? List it today and reach thousands of users.
+            Own a PG? Submit a listing for admin review.
           </p>
         </div>
       </section>

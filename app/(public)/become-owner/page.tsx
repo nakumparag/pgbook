@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "List Your PG | PGBook",
-  description: "List your PG accommodation on PGBook. Reach thousands of verified students and working professionals looking for accommodation.",
+  description: "Submit your PG listing to PGBook for admin review. Manage its status and receive inquiries directly.",
 };
 
 export default function BecomeOwnerPage() {

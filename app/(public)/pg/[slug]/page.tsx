@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: PGDetailProps): Promise<Metad
   const areaName = (pg.localities as any)?.name || "";
 
   const title = `${pg.name} — ${genderLabel} PG in ${areaName}, ${cityName} | PGBook`;
-  const description = `${pg.name} in ${areaName}, ${cityName}. ${genderLabel} PG starting at ${priceLabel}. ${pg.is_verified ? "Verified property." : ""} ${pg.description?.slice(0, 80) || ""}`;
+  const description = `${pg.name} in ${areaName}, ${cityName}. ${genderLabel} PG starting at ${priceLabel}. ${pg.is_verified ? "PGBook-reviewed listing." : ""} ${pg.description?.slice(0, 80) || ""}`;
   const primaryImage = pg.pg_images.find((i: any) => i.is_primary)?.url || pg.pg_images[0]?.url;
 
   return {
@@ -145,7 +145,7 @@ export default async function PGDetail({ params }: PGDetailProps) {
               {pg.is_verified && (
                 <Badge variant="outline" className="text-success border-success/30 bg-success/5 gap-1.5 px-3 py-1">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  Verified Property
+                  PGBook Reviewed
                 </Badge>
               )}
             </div>

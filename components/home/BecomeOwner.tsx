@@ -33,7 +33,7 @@ export function BecomeOwner() {
                 List Your PG on PGBook
               </h2>
               <p className="text-white/80 text-base leading-relaxed mb-6 max-w-md">
-                Reach thousands of people actively searching for accommodation in your area. Free to list. No commission.
+                Submit your PG for admin review and receive inquiries directly. Free to list. No commission.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3">

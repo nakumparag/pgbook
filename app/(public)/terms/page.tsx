@@ -6,7 +6,7 @@ export default function TermsPage() {
           Terms & Conditions
         </h1>
         <div className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground">
-          <p className="lead font-medium text-foreground">Last updated: August 2026</p>
+          <p className="lead font-medium text-foreground">Last updated: October 2026</p>
           
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">1. Acceptance</h2>
           <p>
@@ -20,10 +20,10 @@ export default function TermsPage() {
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">3. PG Listings & Platform Limitations</h2>
           <p>
-            PGBook acts strictly as a discovery platform connecting potential tenants with property owners. <strong>We do not guarantee the condition, safety, or absolute accuracy of third-party property listings unless explicitly verified with a &quot;Verified&quot; badge.</strong>
+            PGBook is a discovery platform connecting potential tenants with property owners. An admin review badge means the submitted listing was reviewed; it is not an on-site inspection or a guarantee of the property's condition, safety, availability, or accuracy. Contact the owner and inspect the PG before paying.
           </p>
           <p>
-            Any rental agreements, financial transactions, or disputes are solely between the tenant and the property owner.
+            PGBook does not take bookings or payments. Any visit arrangements, rental agreements, financial transactions, or disputes are solely between the tenant and the property owner.
           </p>
 
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">4. Owner Responsibilities</h2>

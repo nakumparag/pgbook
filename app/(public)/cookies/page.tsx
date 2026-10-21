@@ -6,7 +6,7 @@ export default function CookiesPage() {
           Cookie Policy
         </h1>
         <div className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground">
-          <p className="lead font-medium text-foreground">Last updated: August 2026</p>
+          <p className="lead font-medium text-foreground">Last updated: October 2026</p>
           
           <p className="mb-6">
             This Cookie Policy explains how PGBook uses cookies and similar technologies to recognize you when you visit our website. It explains what these technologies are and why we use them, as well as your rights to control our use of them.

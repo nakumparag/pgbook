@@ -60,7 +60,7 @@ export function PopularCities() {
             </p>
           </div>
           <Link
-            href="/cities"
+            href="/explore"
             className="flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all shrink-0"
           >
             View all cities

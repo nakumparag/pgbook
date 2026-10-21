@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShieldCheck, MapPin, IndianRupee, Eye, Star, Flag } from "lucide-react";
+import { ShieldCheck, MapPin, IndianRupee, Eye, Star, Phone } from "lucide-react";
 
 const SAFETY_TIPS = [
   {
@@ -26,13 +26,13 @@ const SAFETY_TIPS = [
   },
   {
     icon: Star,
-    title: "Verified Badge Matters",
-    description: "Properties with our Verified badge have been reviewed by the PGBook team.",
+    title: "Understand the review badge",
+    description: "A PGBook Reviewed badge means an admin reviewed the listing. It is not an on-site inspection or a guarantee of safety.",
   },
   {
-    icon: Flag,
-    title: "Report Suspicious Listings",
-    description: "Found something wrong? Report it so we can investigate and protect others.",
+    icon: Phone,
+    title: "Contact the Owner",
+    description: "Use the phone or WhatsApp details on a listing to confirm information and arrange a visit.",
   },
 ];
 
@@ -56,7 +56,7 @@ export function TrustAndSafety() {
               Your safety matters. PGBook is designed to help you make informed decisions — every step of the way.
             </p>
             <Link
-              href="/safety"
+              href="/faq"
               className="inline-flex items-center gap-2 bg-primary text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-colors text-sm"
               aria-label="Read our safety guide"
             >

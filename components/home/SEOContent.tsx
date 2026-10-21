@@ -38,7 +38,7 @@ export function SEOContent() {
               Find PGs Across Ahmedabad
             </h2>
             <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-              Explore verified PGs in popular Ahmedabad locations. Filter by budget, room type, gender and amenities.
+              Explore PG listings in popular Ahmedabad locations. Filter by budget, room type, gender and amenities.
             </p>
             <div className="flex flex-wrap gap-2">
               {AHMEDABAD_LOCALITIES.map((locality) => (

@@ -187,7 +187,7 @@ export function SearchFilters({ className, onFilterChange, initialLocation = "" 
 
           <div className="h-px w-full bg-border" />
 
-          {/* Verified Only */}
+          {/* PGBook reviewed only */}
           <div>
             <label className="flex items-center gap-3 cursor-pointer group">
               <Checkbox
@@ -197,7 +197,7 @@ export function SearchFilters({ className, onFilterChange, initialLocation = "" 
                 className="rounded border-muted-foreground data-[state=checked]:border-primary"
               />
               <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                Verified Properties Only
+                PGBook Reviewed only
               </span>
             </label>
           </div>

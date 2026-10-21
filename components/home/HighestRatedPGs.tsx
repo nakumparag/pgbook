@@ -73,7 +73,7 @@ export function HighestRatedPGs({ pgs = [] }: { pgs?: any[] }) {
                       {pg.name}
                     </h3>
                     {pg.is_verified && (
-                      <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" aria-label="Verified" />
+                      <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" aria-label="PGBook reviewed" />
                     )}
                   </div>
                   <div className="flex items-center text-muted-foreground text-xs mb-2">

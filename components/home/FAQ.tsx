@@ -8,7 +8,7 @@ const FAQS = [
   {
     question: "What is PGBook?",
     answer:
-      "PGBook is a PG discovery platform for Gujarat. It helps students, working professionals, and new-city residents find verified PGs based on location, budget, room type, food, and amenities — without any broker or middleman.",
+      "PGBook is a PG discovery platform for Gujarat. Search published listings by location, budget, room type, food, and amenities, then contact owners directly.",
   },
   {
     question: "How do I find a PG on PGBook?",
@@ -31,9 +31,9 @@ const FAQS = [
       "Yes. Use the 'Find PGs Near Your College' section on the homepage to search by college name. You can also use the 'Looking Near' field in the hero search bar.",
   },
   {
-    question: "Can I compare PGs?",
+    question: "Can I save PGs?",
     answer:
-      "You can save PGs to your favorites list using the heart icon on any property card. A full side-by-side comparison feature is coming soon.",
+      "Use the heart icon on a property card to save it to your favorites list.",
   },
   {
     question: "How do I contact a PG owner?",
@@ -46,9 +46,9 @@ const FAQS = [
       "Click on 'List Your PG' in the navbar or visit the 'Become an Owner' page. Create a free account, submit your PG details, and your listing will be reviewed and published.",
   },
   {
-    question: "How are listings verified?",
+    question: "What does PGBook Reviewed mean?",
     answer:
-      "Listings that display the 'Verified' badge have been reviewed by our team. Verification may include photo validation, address confirmation, and owner contact verification. Unverified listings are still shown but clearly labelled.",
+      "The PGBook Reviewed badge means an admin reviewed the submitted listing. It is not an on-site inspection or a guarantee of the property. Contact the owner and inspect the PG before paying.",
   },
   {
     question: "Is PGBook free to use?",

@@ -6,7 +6,7 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <div className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground">
-          <p className="lead font-medium text-foreground">Last updated: August 2026</p>
+          <p className="lead font-medium text-foreground">Last updated: October 2026</p>
           
           <h2 className="text-2xl font-bold text-foreground mt-10 mb-4">1. Information We Collect</h2>
           <p>

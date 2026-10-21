@@ -306,7 +306,7 @@ export default function ListPgForm() {
           Your PG has been submitted successfully.
         </h2>
         <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-          Thank you for listing your property on PGBook. Your listing is currently <span className="font-bold text-foreground">pending review</span> and will be published for all users to explore once verified.
+          Thank you for submitting your property. It is <span className="font-bold text-foreground">pending admin review</span> and will appear in Explore after approval.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button asChild size="lg" className="rounded-xl py-6 font-bold text-base">
@@ -348,7 +348,7 @@ export default function ListPgForm() {
           List Your PG
         </h1>
         <p className="text-muted-foreground text-base mt-2">
-          Fill in the basic details of your PG accommodation. Reach verified tenants with zero hassle.
+          Add your PG details for review. If approved, people can contact you directly.
         </p>
       </div>
 

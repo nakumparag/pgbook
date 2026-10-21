@@ -19,7 +19,7 @@ const SORT_OPTIONS = [
 ];
 
 const QUICK_FILTERS = [
-  { label: "Verified", param: "verified", value: "true" },
+  { label: "PGBook Reviewed", param: "verified", value: "true" },
   { label: "Food Included", param: "food", value: "included" },
   { label: "Girls PG", param: "gender", value: "girls" },
   { label: "Boys PG", param: "gender", value: "boys" },

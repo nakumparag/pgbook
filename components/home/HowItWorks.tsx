@@ -15,8 +15,8 @@ const STEPS = [
   {
     number: "02",
     icon: SlidersHorizontal,
-    title: "Filter & Compare",
-    description: "Refine by amenities, gender preference, room type and rating. Save your favorites and compare.",
+    title: "Filter & Save",
+    description: "Refine by amenities, gender preference and room type, then save your favorites.",
     color: "text-violet-600 dark:text-violet-400",
     bg: "bg-violet-50 dark:bg-violet-950/30",
   },
@@ -41,7 +41,7 @@ export function HowItWorks() {
             How PGBook Works
           </h2>
           <p className="section-subtext">
-            Search, compare, and contact the owner directly.
+            Search, save listings, and contact the owner directly.
           </p>
         </div>
 

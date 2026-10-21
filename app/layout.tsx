@@ -22,7 +22,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "PGBook — Discover. Compare. Stay.",
+  title: "PGBook — Discover. Connect. Stay.",
   description: "Find PGs based on location, budget, room sharing, food and amenities.",
 };
 

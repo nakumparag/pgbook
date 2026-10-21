@@ -22,13 +22,13 @@ import { createClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "PGBook — Find PGs in Ahmedabad, Surat & Gujarat | Discover. Compare. Stay.",
+  title: "PGBook — Find PGs in Ahmedabad, Surat & Gujarat | Discover. Connect. Stay.",
   description:
-    "Find verified PGs in Ahmedabad, Surat, Vadodara, Rajkot and across Gujarat. Search by location, budget, room type and amenities. Girls PG, Boys PG, Co-Living, Student PG and Working Professional PG on PGBook.",
+    "Discover PG listings in Ahmedabad, Surat, Vadodara, Rajkot and across Gujarat. Search by location, budget, room type and amenities on PGBook.",
   openGraph: {
-    title: "PGBook — Find PGs in Gujarat | Discover. Compare. Stay.",
+    title: "PGBook — Find PGs in Gujarat | Discover. Connect. Stay.",
     description:
-      "Search verified PGs across Gujarat by location, budget, room type and amenities. No broker, no commission.",
+      "Search PG listings across Gujarat by location, budget, room type and amenities. Contact owners directly.",
     url: siteUrl,
     siteName: "PGBook",
     type: "website",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PGBook — Find PGs in Gujarat",
-    description: "Search verified PGs across Gujarat by location, budget, room type and amenities.",
+    description: "Search PG listings across Gujarat by location, budget, room type and amenities.",
   },
   alternates: {
     canonical: siteUrl,

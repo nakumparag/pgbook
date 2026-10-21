@@ -80,7 +80,7 @@ export function PGsNearColleges() {
             <div className="text-6xl mb-4" aria-hidden="true">🏫</div>
             <h3 className="text-xl font-bold text-foreground mb-2">Can&apos;t find your college?</h3>
             <p className="text-muted-foreground text-sm mb-6">
-              Browse all verified PGs across Gujarat and filter by location or landmark.
+              Browse PG listings across Gujarat and filter by location or landmark.
             </p>
             <Link
               href="/explore"

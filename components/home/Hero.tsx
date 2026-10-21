@@ -61,8 +61,8 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-base md:text-lg text-white/75 max-w-2xl mx-auto leading-relaxed mb-10"
           >
-            Discover PGs based on your location, budget, room type and lifestyle.
-            Verified listings. Direct owner contact. No brokerage.
+            Search PG listings by location, budget, room type and lifestyle.
+            Contact owners directly. No brokerage.
           </motion.p>
 
           {/* Search Box */}
@@ -82,8 +82,8 @@ export function Hero() {
             className="flex flex-wrap items-center justify-center gap-6 mt-10"
           >
             {[
-              { icon: "✓", text: "Verified Listings" },
-              { icon: "★", text: "Honest Reviews" },
+              { icon: "⌕", text: "Easy Search" },
+              { icon: "★", text: "Guest Reviews" },
               { icon: "⚡", text: "Direct Owner Contact" },
               { icon: "₹", text: "Zero Brokerage" },
             ].map((item) => (

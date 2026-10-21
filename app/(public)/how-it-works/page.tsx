@@ -34,7 +34,7 @@ export default function HowItWorksPage() {
               </div>
               <h3 className="text-xl font-bold mb-3">Search</h3>
               <p className="text-muted-foreground text-sm">
-                Enter your desired city or location to discover a wide range of verified PGs, hostels, and co-living spaces.
+                Enter a city or location to browse PG listings and compare the details owners provide.
               </p>
               <div className="mt-6 text-primary flex justify-center">
                 <Search className="w-8 h-8 opacity-50" />
@@ -94,7 +94,7 @@ export default function HowItWorksPage() {
         <div className="container-custom">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-heading font-bold mb-4">For PG Owners</h2>
-            <p className="text-muted-foreground">List your property and reach thousands of verified tenants.</p>
+            <p className="text-muted-foreground">Submit your property for admin review, then manage its status from your dashboard.</p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-8 relative">
@@ -130,9 +130,9 @@ export default function HowItWorksPage() {
               <div className="w-16 h-16 bg-accent text-accent-foreground rounded-full flex items-center justify-center mx-auto mb-6 text-xl font-bold shadow-lg">
                 3
               </div>
-              <h3 className="text-xl font-bold mb-3">Get Verified</h3>
+              <h3 className="text-xl font-bold mb-3">Admin Review</h3>
               <p className="text-muted-foreground text-sm">
-                Our team reviews your listing to add a 'Verified' badge, building trust with potential tenants.
+                An admin reviews the submitted listing. A PGBook Reviewed badge means administrative review only, not an on-site inspection.
               </p>
               <div className="mt-6 text-accent flex justify-center">
                 <CheckCircle2 className="w-8 h-8 opacity-50" />

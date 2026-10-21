@@ -27,7 +27,7 @@ export async function generateMetadata({ searchParams }: ExplorePageProps): Prom
   if (roomType === "personal") parts.push("Private Room");
 
   const title = `${parts.join(" ")} | PGBook`;
-  const description = `Find verified ${gender === "girls" ? "girls" : gender === "boys" ? "boys" : ""} PGs${city ? ` in ${cityName}` : " across Gujarat"}${budget ? ` within budget` : ""}. Compare rooms, amenities, food & more. No broker fees.`;
+  const description = `Find ${gender === "girls" ? "girls'" : gender === "boys" ? "boys'" : ""} PG listings${city ? ` in ${cityName}` : " across Gujarat"}${budget ? ` within budget` : ""}. Filter rooms, amenities and food options. Contact owners directly.`;
 
   return {
     title,

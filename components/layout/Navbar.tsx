@@ -32,7 +32,7 @@ import {
 
 const NAV_LINKS = [
   { href: "/explore", label: "Explore PGs" },
-  { href: "/cities", label: "Cities" },
+  { href: "/explore", label: "Cities" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/about", label: "About" },
 ];
@@ -88,7 +88,7 @@ export function Navbar() {
               PGBook
             </span>
             <span className="text-[10px] text-muted-foreground font-medium hidden sm:block">
-              Discover. Compare. Stay.
+              Discover. Connect. Stay.
             </span>
           </div>
         </Link>

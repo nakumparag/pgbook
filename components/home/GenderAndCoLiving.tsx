@@ -92,7 +92,7 @@ function GenderSection({
                 {pg.is_verified && (
                   <div className="absolute top-2 left-2">
                     <span className="badge-verified text-[9px] px-1.5 py-0.5">
-                      <ShieldCheck className="w-2.5 h-2.5" aria-hidden="true" /> Verified
+                      <ShieldCheck className="w-2.5 h-2.5" aria-hidden="true" /> Reviewed
                     </span>
                   </div>
                 )}

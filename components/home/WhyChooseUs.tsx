@@ -12,8 +12,8 @@ const BENEFITS = [
   },
   {
     icon: ShieldCheck,
-    title: "Verified Listings",
-    description: "Properties with the Verified badge are physically checked by our team for accuracy and quality.",
+    title: "Admin-reviewed listings",
+    description: "Listings marked PGBook Reviewed have passed an admin review. Please contact the owner and inspect a property before paying.",
     color: "bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400",
   },
   {
@@ -30,8 +30,8 @@ const BENEFITS = [
   },
   {
     icon: BarChart3,
-    title: "Compare PGs",
-    description: "Save multiple PGs and compare them side by side on price, amenities and location.",
+    title: "Save PGs",
+    description: "Save listings you like and find them later in your favorites.",
     color: "bg-pink-50 dark:bg-pink-950/30 text-pink-600 dark:text-pink-400",
   },
   {

@@ -65,7 +65,7 @@ export function PGCard({ pg }: { pg: SupabasePGListing }) {
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             {pg.is_verified && (
               <Badge className="bg-white/95 text-success hover:bg-white border-none shadow-sm gap-1 pl-1.5 font-bold">
-                <ShieldCheck className="w-4 h-4" /> Verified
+                <ShieldCheck className="w-4 h-4" /> PGBook Reviewed
               </Badge>
             )}
             <Badge variant="secondary" className="bg-white/95 hover:bg-white text-foreground border-none shadow-sm font-semibold capitalize">

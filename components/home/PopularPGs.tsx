@@ -48,7 +48,7 @@ function PGCarouselCard({ pg, index }: { pg: any; index: number }) {
             {pg.is_verified && (
               <span className="badge-verified text-[10px]">
                 <ShieldCheck className="w-3 h-3" aria-hidden="true" />
-                Verified
+                PGBook Reviewed
               </span>
             )}
           </div>
