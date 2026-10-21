@@ -27,6 +27,41 @@ async function verifyPgOwnership(supabase: any, userId: string, pgId: string) {
   return pg;
 }
 
+export async function updateOwnerRoomInventory(pgId: string, roomId: string, values: {
+  rent: number;
+  totalBeds: number;
+  occupiedBeds: number;
+}) {
+  const { supabase, user, error } = await verifyOwner();
+  if (error || !supabase || !user) return { success: false, error: error || "Auth error" };
+  if (!Number.isInteger(values.rent) || values.rent < 1 || values.rent > 500000 ||
+      !Number.isInteger(values.totalBeds) || values.totalBeds < 1 || values.totalBeds > 1000 ||
+      !Number.isInteger(values.occupiedBeds) || values.occupiedBeds < 0 || values.occupiedBeds > values.totalBeds) {
+    return { success: false, error: "Enter a valid monthly rent and bed count." };
+  }
+
+  const { data: room } = await supabase.from("rooms").select("id, pg_id").eq("id", roomId).eq("pg_id", pgId).maybeSingle();
+  if (!room || !(await verifyPgOwnership(supabase, user.id, pgId))) return { success: false, error: "Room not found or unauthorized." };
+
+  const { error: saveError } = await supabase.from("rooms").update({
+    rent: values.rent,
+    total_beds: values.totalBeds,
+    occupied_beds: values.occupiedBeds,
+    availability_status: values.occupiedBeds >= values.totalBeds ? "FULL" : "AVAILABLE",
+  }).eq("id", roomId).eq("pg_id", pgId);
+  if (saveError) return { success: false, error: "Could not save room availability." };
+
+  const { data: rooms } = await supabase.from("rooms").select("rent").eq("pg_id", pgId);
+  if (rooms?.length) {
+    const rents = rooms.map((item: { rent: number }) => item.rent);
+    await supabase.from("pgs").update({ monthly_rent_from: Math.min(...rents), monthly_rent_to: Math.max(...rents) }).eq("id", pgId).eq("owner_id", user.id);
+  }
+  revalidatePath("/owner/dashboard");
+  revalidatePath("/explore");
+  revalidatePath(`/pg`);
+  return { success: true, error: null };
+}
+
 // ── 1. Create a DRAFT PG ─────────────────────────────────────
 export async function createDraftPg() {
   const { supabase, user, error } = await verifyOwner();

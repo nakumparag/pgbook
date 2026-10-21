@@ -9,6 +9,7 @@ import { PGCard, SupabasePGListing } from "@/components/pg/PGCard";
 import { SearchFilters, ActiveFilters } from "@/components/search/SearchFilters";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { GUJARAT_CITIES } from "@/lib/gujarat-cities";
 
 const SORT_OPTIONS = [
   { value: "recommended", label: "Recommended" },
@@ -162,10 +163,14 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
 
     if (locationQuery && !cityQuery && !areaQuery) {
       const loc = locationQuery.toLowerCase();
-      results = results.filter((pg) => getCity(pg).includes(loc) || getArea(pg).includes(loc));
+      results = results.filter((pg) =>
+        getCity(pg).includes(loc) || getArea(pg).includes(loc) || pg.name?.toLowerCase().includes(loc)
+      );
     } else if (sidebarFilters.location && !cityQuery && !areaQuery && !locationQuery) {
       const loc = sidebarFilters.location.toLowerCase();
-      results = results.filter((pg) => getCity(pg).includes(loc) || getArea(pg).includes(loc));
+      results = results.filter((pg) =>
+        getCity(pg).includes(loc) || getArea(pg).includes(loc) || pg.name?.toLowerCase().includes(loc)
+      );
     }
 
     results = results.filter(
@@ -299,9 +304,13 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
                 placeholder="Search city, area or landmark..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                list="explore-gujarat-city-options"
                 className="bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground flex-1"
                 aria-label="Search location"
               />
+            <datalist id="explore-gujarat-city-options">
+              {GUJARAT_CITIES.map((city) => <option key={city} value={city} />)}
+            </datalist>
               {searchQuery && (
                 <button
                   type="button"

@@ -7,7 +7,25 @@ VALUES
   ('Gandhinagar', 'gandhinagar', true),
   ('Surat', 'surat', true),
   ('Vadodara', 'vadodara', true),
-  ('Rajkot', 'rajkot', true)
+  ('Rajkot', 'rajkot', true),
+  ('Bhavnagar', 'bhavnagar', true),
+  ('Jamnagar', 'jamnagar', true),
+  ('Junagadh', 'junagadh', true),
+  ('Anand', 'anand', true),
+  ('Bharuch', 'bharuch', true),
+  ('Vapi', 'vapi', true),
+  ('Mehsana', 'mehsana', true),
+  ('Morbi', 'morbi', true),
+  ('Nadiad', 'nadiad', true),
+  ('Navsari', 'navsari', true),
+  ('Valsad', 'valsad', true),
+  ('Porbandar', 'porbandar', true),
+  ('Bhuj', 'bhuj', true),
+  ('Amreli', 'amreli', true),
+  ('Palanpur', 'palanpur', true),
+  ('Godhra', 'godhra', true),
+  ('Surendranagar', 'surendranagar', true),
+  ('Gondal', 'gondal', true)
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO public.localities (city_id, name, slug)

@@ -13,6 +13,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
 };
 
 import { pausePgListing, deletePgListing } from "@/app/actions/owner_pgs";
+import { RoomInventoryForm } from "@/components/owner/RoomInventoryForm";
 
 export default async function OwnerDashboard() {
   const supabase = await createClient();
@@ -246,8 +247,8 @@ export default async function OwnerDashboard() {
                           <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {saves}</span>
                         </div>
                         <div className="flex gap-2">
-                          <Link href={`/owner/add-pg?pgId=${pg.id}`}>
-                            <Button variant="outline" size="sm" className="rounded-lg text-xs font-bold">Edit</Button>
+                          <Link href={`/owner/add-pg/location?pgId=${pg.id}`}>
+                            <Button variant="outline" size="sm" className="rounded-lg text-xs font-bold">Edit details</Button>
                           </Link>
                           {pg.status === "APPROVED" && (
                             <form action={async () => { "use server"; await pausePgListing(pg.id); }}>
@@ -259,6 +260,7 @@ export default async function OwnerDashboard() {
                           </form>
                         </div>
                       </div>
+                      {(pg.rooms as any[])?.length > 0 && <RoomInventoryForm pgId={pg.id} rooms={(pg.rooms as any[]).map((room) => ({ id: room.id, room_type: room.room_type, rent: room.rent, total_beds: room.total_beds, occupied_beds: room.occupied_beds }))} />}
                     </div>
                   </div>
                 );

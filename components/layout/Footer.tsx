@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GUJARAT_CITIES } from "@/lib/gujarat-cities";
 
 const FOOTER_LINKS = {
   explore: [
@@ -32,10 +33,6 @@ const FOOTER_LINKS = {
     { label: "Cookie Policy", href: "/cookies" },
   ],
 };
-
-const CITIES = [
-  "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Gandhinagar", "Anand",
-];
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -70,7 +67,7 @@ export function Footer() {
             <div className="mt-6">
               <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-3">PGs in Cities</p>
               <div className="flex flex-wrap gap-2">
-                {CITIES.map((city) => (
+                {GUJARAT_CITIES.map((city) => (
                   <Link
                     key={city}
                     href={`/explore?city=${city.toLowerCase()}`}
@@ -169,6 +166,9 @@ export function Footer() {
           <p className="text-white/40 text-sm text-center sm:text-left">
             © {currentYear} PGBook. All rights reserved. Made with ❤️ in India.
           </p>
+          <a href="https://www.instagram.com/pgbook.co/" target="_blank" rel="noopener noreferrer" aria-label="PGBook on Instagram" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r=".8" fill="currentColor"/></svg> Instagram
+          </a>
         </div>
 
       </div>

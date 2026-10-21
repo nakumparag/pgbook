@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MapPin } from "lucide-react";
+import { LocateFixed, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { saveLocation, fetchDraftPg } from "@/app/actions/owner_pgs";
@@ -18,6 +18,8 @@ export function LocationContent({ basePath = "/owner/add-pg" }: { basePath?: str
   const [cityId, setCityId] = useState("");
   const [localityId, setLocalityId] = useState("");
   const [address, setAddress] = useState("");
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,6 +37,7 @@ export function LocationContent({ basePath = "/owner/add-pg" }: { basePath?: str
           setCityId(pg.city_id || "");
           setLocalityId(pg.locality_id || "");
           setAddress(pg.address || "");
+          if (pg.lat != null && pg.lng != null) setCoordinates({ lat: Number(pg.lat), lng: Number(pg.lng) });
         }
       }
     };
@@ -56,7 +59,7 @@ export function LocationContent({ basePath = "/owner/add-pg" }: { basePath?: str
     setError(null);
     setSaving(true);
 
-    const result = await saveLocation(pgId, { city_id: cityId, locality_id: localityId, address });
+    const result = await saveLocation(pgId, { city_id: cityId, locality_id: localityId, address, lat: coordinates?.lat ?? null, lng: coordinates?.lng ?? null });
     setSaving(false);
 
     if (!result.success) { setError(result.error || "Failed to save."); return; }
@@ -67,7 +70,7 @@ export function LocationContent({ basePath = "/owner/add-pg" }: { basePath?: str
     setError(null);
     setSaving(true);
     if (cityId && localityId) {
-      await saveLocation(pgId, { city_id: cityId, locality_id: localityId, address });
+      await saveLocation(pgId, { city_id: cityId, locality_id: localityId, address, lat: coordinates?.lat ?? null, lng: coordinates?.lng ?? null });
     }
     setSaving(false);
   };
@@ -129,19 +132,22 @@ export function LocationContent({ basePath = "/owner/add-pg" }: { basePath?: str
           />
         </div>
 
-        {/* Map placeholder */}
         <div className="mt-4 pt-4 border-t border-border">
           <div className="flex items-center gap-2 mb-3 text-primary">
             <MapPin className="w-5 h-5" />
-            <span className="text-sm font-bold">Mark Location on Map</span>
+            <span className="text-sm font-bold">Pinpoint your PG</span>
           </div>
-          <div className="h-48 rounded-xl bg-muted border border-border flex items-center justify-center">
-            <div className="text-center p-6">
-              <MapPin className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm font-medium text-muted-foreground">Map integration requires a Google Maps API key.</p>
-              <p className="text-xs text-muted-foreground mt-1">Your address will be used for location.</p>
-            </div>
-          </div>
+          <p className="mb-3 text-sm text-muted-foreground">Use your device location to save accurate map coordinates. You can still enter the address above.</p>
+          <Button type="button" variant="outline" disabled={locating} onClick={() => {
+            if (!navigator.geolocation) { setError("Location is not available in this browser."); return; }
+            setLocating(true);
+            navigator.geolocation.getCurrentPosition(
+              ({ coords }) => { setCoordinates({ lat: coords.latitude, lng: coords.longitude }); setLocating(false); setError(null); },
+              () => { setLocating(false); setError("Could not get your location. Allow location access and try again."); },
+              { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+            );
+          }} className="rounded-xl gap-2"><LocateFixed className="h-4 w-4" />{locating ? "Finding location…" : "Use current location"}</Button>
+          {coordinates && <p className="mt-2 text-xs text-muted-foreground" role="status">Location pin saved: {coordinates.lat.toFixed(5)}, {coordinates.lng.toFixed(5)}</p>}
         </div>
       </div>
 

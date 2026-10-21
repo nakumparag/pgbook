@@ -32,29 +32,6 @@ interface LocalityOption {
   city_id: string;
 }
 
-const DEFAULT_CITIES: CityOption[] = [
-  { id: "ccf6b6af-2d4d-45d7-a7e7-0ffbcbb5f929", name: "Ahmedabad" },
-  { id: "b7174f88-62ba-415d-8f46-77127932ef8e", name: "Gandhinagar" },
-  { id: "3d363d62-34c7-47ef-8d64-5231f092c575", name: "Surat" },
-  { id: "4944977d-ec28-4985-b2a4-5986f23821fb", name: "Vadodara" },
-  { id: "4a5743ee-eb8c-4191-986f-aed4293dbb90", name: "Rajkot" },
-];
-
-const DEFAULT_LOCALITIES: LocalityOption[] = [
-  { id: "7a82d838-61b6-4a24-ae5c-87c42878bf5a", city_id: "ccf6b6af-2d4d-45d7-a7e7-0ffbcbb5f929", name: "Sola" },
-  { id: "3441cba7-4504-41da-af51-6a9d65025ad5", city_id: "ccf6b6af-2d4d-45d7-a7e7-0ffbcbb5f929", name: "Satellite" },
-  { id: "bc20c03d-a50a-4b71-8a27-033d0ded565a", city_id: "ccf6b6af-2d4d-45d7-a7e7-0ffbcbb5f929", name: "Navrangpura" },
-  { id: "3c6aa917-02fe-4c29-8af4-81bf0ccee93e", city_id: "ccf6b6af-2d4d-45d7-a7e7-0ffbcbb5f929", name: "Vastrapur" },
-  { id: "876bfa7f-fe93-42ae-bcae-4b9686d27e88", city_id: "ccf6b6af-2d4d-45d7-a7e7-0ffbcbb5f929", name: "Prahlad Nagar" },
-  { id: "781d5a9a-3f79-4209-880f-90136dc1a97a", city_id: "b7174f88-62ba-415d-8f46-77127932ef8e", name: "Infocity" },
-  { id: "eb7eaa5c-a105-4ae1-ab87-16455198b968", city_id: "b7174f88-62ba-415d-8f46-77127932ef8e", name: "Kudasan" },
-  { id: "0e5d3b12-6582-486f-a9d5-2b8a9ba799da", city_id: "3d363d62-34c7-47ef-8d64-5231f092c575", name: "Adajan" },
-  { id: "eab3e455-45f9-43ea-a0de-d6fdbf224fed", city_id: "3d363d62-34c7-47ef-8d64-5231f092c575", name: "Vesu" },
-  { id: "82f6f446-e616-40e4-ad24-84efe9c72b9b", city_id: "4944977d-ec28-4985-b2a4-5986f23821fb", name: "Alkapuri" },
-  { id: "fa263f3f-fd30-4281-91f0-65aec7b2c5e0", city_id: "4944977d-ec28-4985-b2a4-5986f23821fb", name: "Sayajigunj" },
-  { id: "4f33d76c-9225-4a74-8897-2a58261c277c", city_id: "4a5743ee-eb8c-4191-986f-aed4293dbb90", name: "Kalawad Road" },
-];
-
 const ROOM_TYPES = [
   { value: "Single", label: "Single" },
   { value: "2 Sharing", label: "2 Sharing" },
@@ -84,10 +61,10 @@ export default function ListPgForm() {
   const [user, setUser] = useState<any>(null);
 
   // Location data
-  const [cities, setCities] = useState<CityOption[]>(DEFAULT_CITIES);
-  const [localities, setLocalities] = useState<LocalityOption[]>(DEFAULT_LOCALITIES);
-  const [cityId, setCityId] = useState<string>("ccf6b6af-2d4d-45d7-a7e7-0ffbcbb5f929"); // Ahmedabad
-  const [localityId, setLocalityId] = useState<string>("7a82d838-61b6-4a24-ae5c-87c42878bf5a"); // Sola
+  const [cities, setCities] = useState<CityOption[]>([]);
+  const [localities, setLocalities] = useState<LocalityOption[]>([]);
+  const [cityId, setCityId] = useState<string>("");
+  const [localityId, setLocalityId] = useState<string>("");
 
   // Form states
   const [name, setName] = useState("");
@@ -149,7 +126,7 @@ export default function ListPgForm() {
           setLocalities(dbLocs);
         }
       } catch {
-        // Fallback to DEFAULT_CITIES and DEFAULT_LOCALITIES is preserved
+        setError("Couldn't load the city list. Refresh the page and try again.");
       }
     }
     checkAuthAndLoadLocations();
@@ -321,8 +298,8 @@ export default function ListPgForm() {
             onClick={() => {
               setIsSuccess(false);
               setName("");
-              setCityId("ccf6b6af-2d4d-45d7-a7e7-0ffbcbb5f929");
-              setLocalityId("7a82d838-61b6-4a24-ae5c-87c42878bf5a");
+              setCityId("");
+              setLocalityId("");
               setAddress("");
               setRent("");
               setDescription("");

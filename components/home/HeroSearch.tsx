@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Wallet, Home, Utensils } from "lucide-react";
+import { GUJARAT_CITIES } from "@/lib/gujarat-cities";
 import {
   Select,
   SelectContent,
@@ -69,7 +70,11 @@ export function HeroSearch() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 aria-label="Search location"
+                list="gujarat-city-options"
               />
+              <datalist id="gujarat-city-options">
+                {GUJARAT_CITIES.map((city) => <option key={city} value={city} />)}
+              </datalist>
             </div>
           </div>
 

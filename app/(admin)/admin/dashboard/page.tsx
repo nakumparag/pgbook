@@ -47,6 +47,19 @@ export default async function AdminDashboard() {
     .eq("status", "APPROVED")
     .limit(20);
 
+  const { data: pendingListings } = await supabase
+    .from("pgs")
+    .select(`
+      id, slug, name, description, address, gender, food_status, created_at,
+      cities ( name ), localities ( name ),
+      profiles!owner_id ( full_name, phone ),
+      rooms ( room_type, rent, security_deposit, total_beds, occupied_beds ),
+      pg_images ( url, is_primary, display_order )
+    `)
+    .eq("status", "PENDING")
+    .order("created_at", { ascending: true })
+    .limit(100);
+
   // Quick stats queries
   const [{ count: totalPGs }, { count: totalUsers }, { count: totalOwners }, { count: totalInquiries }, { count: openReports }] = await Promise.all([
     supabase.from("pgs").select("*", { count: "exact", head: true }),
@@ -112,6 +125,33 @@ export default async function AdminDashboard() {
       <div className="mb-10 flex flex-wrap gap-3"><Link href="/admin/inquiries" className="btn btn-primary">Manage inquiries</Link><Link href="/admin/reviews" className="btn btn-outline">Review reports & moderation</Link></div>
 
       <ApprovalRequestsTable requests={approvalRequests} />
+
+      <section className="mb-10 space-y-4" aria-labelledby="pending-pg-review-heading">
+        <div>
+          <h2 id="pending-pg-review-heading" className="text-2xl font-heading font-bold text-foreground">PG listings waiting for review</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Review the submitted address, prices, room capacity and owner photos before publishing.</p>
+        </div>
+        {(pendingListings || []).map((pg: any) => {
+          const images = [...(pg.pg_images || [])].sort((a: any, b: any) => Number(b.is_primary) - Number(a.is_primary) || (a.display_order || 0) - (b.display_order || 0));
+          return <article key={pg.id} className="grid gap-5 rounded-2xl border border-border bg-card p-5 md:grid-cols-[180px_1fr]">
+            <div className="grid grid-cols-2 gap-2 self-start">{images.length ? images.map((image: any, i: number) => <img key={image.url} src={image.url} alt={`${pg.name} photo ${i + 1}`} className="h-24 w-full rounded-lg object-cover" />) : <div className="col-span-2 flex h-40 items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">No property photos</div>}</div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div><h3 className="text-xl font-bold">{pg.name}</h3><p className="mt-1 text-sm text-muted-foreground">{pg.localities?.name}, {pg.cities?.name} · {pg.address}</p></div>
+                <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-700">Pending review</span>
+              </div>
+              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{pg.description || "No description supplied."}</p>
+              <p className="mt-3 text-sm"><strong>Owner:</strong> {pg.profiles?.full_name || "Unknown"} · <strong>Contact:</strong> {pg.profiles?.phone || "Not provided"} · <strong>For:</strong> {String(pg.gender).replaceAll("_", " ")}</p>
+              <div className="mt-3 flex flex-wrap gap-2">{(pg.rooms || []).map((room: any, i: number) => <span key={`${room.room_type}-${i}`} className="rounded-lg bg-muted px-3 py-2 text-xs font-semibold">{String(room.room_type).replaceAll("_", " ")} · ₹{Number(room.rent).toLocaleString("en-IN")}/mo · {room.occupied_beds}/{room.total_beds} occupied</span>)}</div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <form action={async () => { "use server"; await updatePgStatus(pg.id, "APPROVED"); }}><Button type="submit" size="sm">Approve listing</Button></form>
+                <form action={async () => { "use server"; await updatePgStatus(pg.id, "REJECTED"); }}><Button type="submit" size="sm" variant="outline">Reject</Button></form>
+              </div>
+            </div>
+          </article>;
+        })}
+        {(!pendingListings || pendingListings.length === 0) && <p className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">No PG listings waiting for review.</p>}
+      </section>
 
       <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
         <div className="p-6 border-b border-border/50 bg-muted/20 flex items-center justify-between">

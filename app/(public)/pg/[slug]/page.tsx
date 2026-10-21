@@ -22,7 +22,7 @@ async function getPGBySlug(slug: string) {
     const { data, error } = await supabase
       .from("pgs")
       .select(`
-        id, slug, name, description, address, gender, rating, review_count, status, is_verified, owner_id, available_from, rules,
+        id, slug, name, description, address, lat, lng, gender, rating, review_count, status, is_verified, owner_id, available_from, rules,
         cities ( name ), localities ( name ),
         rooms ( id, room_type, rent, total_beds, occupied_beds, security_deposit, electricity_charges, maintenance_charges, other_charges ),
         pg_images ( url, is_primary, category ),
@@ -121,10 +121,6 @@ export default async function PGDetail({ params }: PGDetailProps) {
     category: img.category || "Property"
   }));
 
-  if (imagesForGallery.length === 0) {
-    imagesForGallery.push({ id: "placeholder", url: "/placeholder-image.jpg", isPrimary: true, category: "Property" });
-  }
-
   return (
     <div className="container-custom py-8">
       <VisitTracker pgId={pg.id} />
@@ -161,6 +157,7 @@ export default async function PGDetail({ params }: PGDetailProps) {
               <MapPin className="w-5 h-5 text-primary" />
               {pg.address}, {areaName}, {cityName}
             </p>
+            {pg.lat != null && pg.lng != null && <a href={`https://maps.google.com/?q=${encodeURIComponent(`${pg.lat},${pg.lng}`)}`} target="_blank" rel="noopener noreferrer" className="mb-4 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-primary hover:underline"><MapPin className="h-4 w-4" /> Open exact location in Maps</a>}
             {pg.available_from && (
               <p className="inline-block bg-muted/50 text-foreground font-semibold px-4 py-2 rounded-xl text-sm border border-border shadow-sm">
                 Available From: <span className="text-primary">{new Date(pg.available_from).toLocaleDateString()}</span>

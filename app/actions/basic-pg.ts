@@ -101,75 +101,20 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
       console.warn("Owner profile setup note:", ownerErr);
     }
 
-    // 4. Resolve City and Locality (Use actual database UUIDs directly)
+    // 4. Validate that the selected city and locality are real and related.
     const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    let cityId: string | null = UUID_REGEX.test(cityIdInput) ? cityIdInput : null;
-    let localityId: string | null = UUID_REGEX.test(localityIdInput) ? localityIdInput : null;
-
-    // Fallback: If not passed as valid UUID, lookup by name or pick active default
-    if (!cityId) {
-      if (cityNameInput) {
-        const { data: matchedCity } = await supabase
-          .from("cities")
-          .select("id")
-          .ilike("name", `%${cityNameInput}%`)
-          .limit(1)
-          .maybeSingle();
-        cityId = matchedCity?.id || null;
-      }
-      if (!cityId) {
-        const { data: defaultCity } = await supabase
-          .from("cities")
-          .select("id")
-          .eq("is_active", true)
-          .limit(1)
-          .maybeSingle();
-        cityId = defaultCity?.id || null;
-      }
+    if (!UUID_REGEX.test(cityIdInput) || !UUID_REGEX.test(localityIdInput)) {
+      return { success: false, error: "Choose a city and locality from the available list." };
     }
-
-    if (!localityId && cityId) {
-      if (localityNameInput) {
-        const { data: matchedLoc } = await supabase
-          .from("localities")
-          .select("id")
-          .eq("city_id", cityId)
-          .ilike("name", `%${localityNameInput}%`)
-          .limit(1)
-          .maybeSingle();
-        localityId = matchedLoc?.id || null;
-      }
-      if (!localityId) {
-        const { data: defaultLoc } = await supabase
-          .from("localities")
-          .select("id")
-          .eq("city_id", cityId)
-          .limit(1)
-          .maybeSingle();
-        localityId = defaultLoc?.id || null;
-      }
+    const [{ data: city }, { data: locality }] = await Promise.all([
+      supabase.from("cities").select("id").eq("id", cityIdInput).eq("is_active", true).maybeSingle(),
+      supabase.from("localities").select("id, city_id").eq("id", localityIdInput).maybeSingle(),
+    ]);
+    if (!city || !locality || locality.city_id !== city.id) {
+      return { success: false, error: "That locality does not belong to the selected city. Please choose it again." };
     }
-
-    if (!localityId) {
-      const { data: anyLoc } = await supabase
-        .from("localities")
-        .select("id, city_id")
-        .limit(1)
-        .maybeSingle();
-      if (anyLoc) {
-        localityId = anyLoc.id;
-        if (!cityId) cityId = anyLoc.city_id;
-      }
-    }
-
-    // Verify valid database UUIDs exist
-    if (!cityId || !localityId) {
-      console.error("Location resolution failed:", { cityId, localityId, cityNameInput, localityNameInput });
-      return {
-        success: false,
-        error: "Unable to find a valid city or locality in the system. Please select a supported city or contact support."
-      };
-    }
+    const cityId = city.id;
+    const localityId = locality.id;
 
     // 5. Generate unique slug
     const baseSlug = slugify(name);
@@ -260,7 +205,6 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
 
     // 9. Handle Uploaded Photos
     const photoFiles = formData.getAll("photos") as File[];
-    let hasUploadedImage = false;
 
     if (photoFiles && photoFiles.length > 0) {
       for (let i = 0; i < Math.min(photoFiles.length, 5); i++) {
@@ -295,26 +239,11 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
                 is_primary: i === 0,
                 display_order: i
               });
-              hasUploadedImage = true;
             }
           }
         } catch (uploadErr) {
           console.error("Photo upload error:", uploadErr);
         }
-      }
-    }
-
-    // If no custom photos were uploaded, add a high-quality default PG image
-    if (!hasUploadedImage) {
-      try {
-        await supabase.from("pg_images").insert({
-          pg_id: pg.id,
-          url: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1000&q=80",
-          is_primary: true,
-          display_order: 0
-        });
-      } catch {
-        // Ignored
       }
     }
 
