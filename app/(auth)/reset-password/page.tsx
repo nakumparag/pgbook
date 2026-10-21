@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Lock, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
@@ -139,38 +139,32 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit} method="POST" action="#" className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground ml-1">New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input 
-                    type="password" 
-                    name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required 
-                    autoComplete="new-password"
-                    className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
-                    placeholder="Enter new password"
-                    minLength={8}
-                  />
-                </div>
+                <PasswordInput
+                  leadingIcon={<Lock className="h-5 w-5" />}
+                  name="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  className="py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent"
+                  placeholder="Enter new password"
+                  minLength={8}
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground ml-1">Confirm New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input 
-                    type="password" 
-                    name="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required 
-                    autoComplete="new-password"
-                    className="pl-11 py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent" 
-                    placeholder="Confirm new password"
-                    minLength={8}
-                  />
-                </div>
+                <PasswordInput
+                  leadingIcon={<Lock className="h-5 w-5" />}
+                  name="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  className="py-6 rounded-xl bg-muted/50 focus-visible:bg-transparent"
+                  placeholder="Confirm new password"
+                  minLength={8}
+                />
               </div>
 
               <Button 

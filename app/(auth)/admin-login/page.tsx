@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { ShieldCheck, Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { adminLogin } from "@/app/actions/admin-auth";
 
 export default function AdminLoginPage() {
@@ -80,16 +81,14 @@ export default function AdminLoginPage() {
               <div className="flex items-center justify-between ml-1">
                 <label className="text-sm font-semibold text-zinc-300">Password</label>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                <Input 
-                  type="password" 
-                  name="password"
-                  required 
-                  className="pl-11 py-6 rounded-xl bg-zinc-950/50 border-zinc-800 text-white focus-visible:ring-primary focus-visible:border-primary placeholder:text-zinc-600 transition-all" 
-                  placeholder="••••••••"
-                />
-              </div>
+              <PasswordInput
+                leadingIcon={<Lock className="h-5 w-5 text-zinc-500" />}
+                name="password"
+                required
+                className="py-6 rounded-xl bg-zinc-950/50 border-zinc-800 text-white focus-visible:ring-primary focus-visible:border-primary placeholder:text-zinc-600 transition-all"
+                toggleClassName="text-zinc-500 hover:text-zinc-200 focus-visible:ring-primary focus-visible:ring-offset-zinc-950"
+                placeholder="••••••••"
+              />
             </div>
 
             <Button 
