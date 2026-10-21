@@ -74,7 +74,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect logged in users away from auth pages
-  const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password']
+  // Recovery links establish an authenticated session before the user chooses
+  // a new password, so keep /reset-password reachable for signed-in users.
+  const authRoutes = ['/login', '/signup', '/forgot-password']
   const isAuthRoute = authRoutes.includes(pathname)
 
   if (user && isAuthRoute) {
