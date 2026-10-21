@@ -254,19 +254,12 @@ export default async function PGDetail({ params }: PGDetailProps) {
                       </div>
                       
                       {/* Charges */}
-                      <div className="grid grid-cols-2 gap-y-2 text-sm text-muted-foreground mb-6 bg-muted/30 p-4 rounded-xl border border-border">
-                        <div className="flex justify-between col-span-2">
-                          <span>Deposit:</span>
-                          <span className="font-bold text-foreground">₹{(room.security_deposit || 0).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between pr-2">
-                          <span>Electricity:</span>
-                          <span className="font-bold text-foreground">₹{room.electricity_charges || 0}/mo</span>
-                        </div>
-                        <div className="flex justify-between pl-2">
-                          <span>Maintenance:</span>
-                          <span className="font-bold text-foreground">₹{room.maintenance_charges || 0}/mo</span>
-                        </div>
+                      <div className="grid grid-cols-1 gap-y-2 text-sm text-muted-foreground mb-6 bg-muted/30 p-4 rounded-xl border border-border sm:grid-cols-2">
+                        {room.security_deposit != null && <div className="flex justify-between sm:col-span-2"><span>Deposit:</span><span className="font-bold text-foreground">₹{room.security_deposit.toLocaleString()}</span></div>}
+                        {room.electricity_charges != null && <div className="flex justify-between pr-2"><span>Electricity:</span><span className="font-bold text-foreground">₹{room.electricity_charges}/mo</span></div>}
+                        {room.maintenance_charges != null && <div className="flex justify-between pl-2"><span>Maintenance:</span><span className="font-bold text-foreground">₹{room.maintenance_charges}/mo</span></div>}
+                        {room.other_charges != null && <div className="flex justify-between sm:col-span-2"><span>Other charges:</span><span className="font-bold text-foreground">₹{room.other_charges.toLocaleString()}</span></div>}
+                        {room.security_deposit == null && room.electricity_charges == null && room.maintenance_charges == null && room.other_charges == null && <p className="sm:col-span-2">Ask the owner to confirm deposit and additional charges.</p>}
                       </div>
 
                       {available ? (

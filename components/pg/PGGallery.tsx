@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Grid, Image as ImageIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Grid, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,12 +20,23 @@ export function PGGallery({ images }: PGGalleryProps) {
 
   if (!images || images.length === 0) return null;
 
+  const gridLayout = images.length === 1
+    ? "grid-cols-1 grid-rows-1"
+    : images.length === 2
+      ? "grid-cols-2 grid-rows-1"
+      : images.length === 3
+        ? "grid-cols-3 grid-rows-1"
+        : images.length === 4
+          ? "grid-cols-2 grid-rows-2"
+          : "grid-cols-4 grid-rows-2";
+  const primaryLayout = images.length >= 5 ? "col-span-2 row-span-2" : "col-span-1 row-span-1";
+
   return (
     <Dialog>
       <div className="relative group rounded-3xl overflow-hidden">
         {/* Desktop Layout */}
-        <div className="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-125">
-          <div className="col-span-2 row-span-2 relative h-full">
+        <div className={`hidden md:grid ${gridLayout} gap-2 h-125`}>
+          <div className={`${primaryLayout} relative h-full`}>
             <Image
               src={images[0].url}
               alt="Primary Image"
@@ -34,7 +45,7 @@ export function PGGallery({ images }: PGGalleryProps) {
               priority
             />
           </div>
-          {images.slice(1, 5).map((img, idx) => (
+          {images.slice(1, images.length >= 5 ? 5 : undefined).map((img, idx) => (
             <div key={idx} className="relative h-full">
               <Image
                 src={img.url}
@@ -42,12 +53,6 @@ export function PGGallery({ images }: PGGalleryProps) {
                 fill
                 className="object-cover cursor-pointer hover:opacity-90 transition-opacity"
               />
-            </div>
-          ))}
-          {/* Fill empty spots if less than 5 images */}
-          {images.length < 5 && Array.from({ length: 5 - images.length }).map((_, idx) => (
-            <div key={`empty-${idx}`} className="bg-muted relative h-full flex items-center justify-center">
-              <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
             </div>
           ))}
         </div>
