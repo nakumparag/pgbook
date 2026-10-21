@@ -14,6 +14,8 @@ interface PGDetailProps {
   params: Promise<{ slug: string }>;
 }
 
+export const dynamic = "force-dynamic";
+
 async function getPGBySlug(slug: string) {
   try {
     const supabase = await createClient();
@@ -90,11 +92,6 @@ export async function generateMetadata({ params }: PGDetailProps): Promise<Metad
       canonical: `${siteUrl}/pg/${pg.slug}`,
     },
   };
-}
-
-export async function generateStaticParams() {
-  // Keep listing pages dynamic so new approved PGs are available without a rebuild.
-  return [];
 }
 
 export default async function PGDetail({ params }: PGDetailProps) {
