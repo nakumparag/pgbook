@@ -22,6 +22,9 @@ const SORT_OPTIONS = [
 const QUICK_FILTERS = [
   { label: "PGBook Reviewed", param: "verified", value: "true" },
   { label: "Food Included", param: "food", value: "included" },
+  { label: "Food Available", param: "food", value: "available" },
+  { label: "No Food", param: "food", value: "none" },
+  { label: "Both Plans", param: "food", value: "both" },
   { label: "Girls PG", param: "gender", value: "girls" },
   { label: "Boys PG", param: "gender", value: "boys" },
   { label: "WiFi", param: "amenity", value: "wifi" },
@@ -79,7 +82,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
         const { data, error } = await supabase
           .from("pgs")
           .select(`
-          id, slug, name, address, gender, status, is_verified, rating, review_count, description, created_at, monthly_rent_from, monthly_rent_to,
+          id, slug, name, address, gender, food_status, status, is_verified, rating, review_count, description, created_at, monthly_rent_from, monthly_rent_to,
             cities ( name ), localities ( name ), rooms ( rent, room_type ),
             pg_images ( url, is_primary ), pg_amenities ( amenities ( name, icon, category ) )
           `)
@@ -115,9 +118,7 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
       const g = filter.value === "girls" ? "Female" : "Male";
       return sidebarFilters.genders.includes(g) || urlGender === filter.value;
     }
-    if (filter.param === "food") {
-      return sidebarFilters.amenities.some((a) => a.toLowerCase().includes("meal")) || urlFood === "included";
-    }
+    if (filter.param === "food") return urlFood === filter.value;
     if (filter.param === "amenity") {
       return (
         sidebarFilters.amenities.some((a) => a.toLowerCase() === filter.value.toLowerCase()) ||
@@ -221,11 +222,14 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
       );
     }
 
-    if (urlFood === "included" || urlFood === "available" || urlFood === "none") {
-      results = results.filter((pg) => {
-        const hasFood = getFlatAmenities(pg).some((a: string) => a.includes("meal") || a.includes("food"));
-        return urlFood === "none" ? !hasFood : hasFood;
-      });
+    if (["included", "available", "none", "both"].includes(urlFood)) {
+      const foodStatusByFilter: Record<string, string> = {
+        included: "INCLUDED",
+        available: "AVAILABLE",
+        none: "NOT_AVAILABLE",
+        both: "BOTH",
+      };
+      results = results.filter((pg) => pg.food_status === foodStatusByFilter[urlFood]);
     }
 
     if (urlRoomType) {

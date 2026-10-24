@@ -37,11 +37,28 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
     const cityNameInput = (formData.get("cityName") as string || formData.get("city") as string || "").trim();
     const localityNameInput = (formData.get("localityName") as string || formData.get("area") as string || "").trim();
     const address = (formData.get("address") as string || "").trim();
-    const rentRaw = formData.get("rent") as string || "";
-    const rent = parseInt(rentRaw, 10);
-    const roomType = (formData.get("roomType") as string || "Single").trim();
-    const foodAvailableRaw = formData.get("foodAvailable") as string || "No";
-    const foodAvailable = foodAvailableRaw === "Yes";
+    const legacyRent = Number(formData.get("rent") as string || 0);
+    const legacyRoomType = (formData.get("roomType") as string || "Single").trim();
+    let submittedRooms: Array<{ type: string; rent: number; deposit: number }> = [];
+    const roomsRaw = formData.get("rooms") as string | null;
+    if (roomsRaw) {
+      try {
+        const parsed = JSON.parse(roomsRaw);
+        if (Array.isArray(parsed)) submittedRooms = parsed.map((room) => ({ type: String(room.type || ""), rent: Number(room.rent), deposit: Number(room.deposit ?? 0) }));
+      } catch {
+        return { success: false, error: "Room details are invalid. Please review the room prices and try again." };
+      }
+    } else if (legacyRent > 0) {
+      submittedRooms = [{ type: legacyRoomType, rent: legacyRent, deposit: 0 }];
+    }
+    const roomTypeEnumMap: Record<string, "PERSONAL" | "2_SHARING" | "3_SHARING" | "4_SHARING"> = {
+      "Single": "PERSONAL", "2 Sharing": "2_SHARING", "3 Sharing": "3_SHARING", "4 Sharing": "4_SHARING", "Other": "PERSONAL",
+    };
+    const validRoomTypes = Object.keys(roomTypeEnumMap);
+    const rent = submittedRooms.length ? Math.min(...submittedRooms.map((room) => room.rent)) : 0;
+    const foodStatusRaw = formData.get("foodStatus") as string || (formData.get("foodAvailable") === "Yes" ? "AVAILABLE" : "NOT_AVAILABLE");
+    const foodStatus = ["INCLUDED", "AVAILABLE", "NOT_AVAILABLE", "BOTH"].includes(foodStatusRaw) ? foodStatusRaw : null;
+    const foodAvailable = foodStatus !== "NOT_AVAILABLE";
     const description = (formData.get("description") as string || "").trim();
     const contactPhone = (formData.get("contactPhone") as string || "").trim();
     
@@ -63,11 +80,19 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
     if (!address || address.length < 5) {
       return { success: false, error: "Full Address is required." };
     }
-    if (isNaN(rent) || rent <= 0) {
-      return { success: false, error: "Please enter a valid monthly rent amount." };
+    if (submittedRooms.length === 0 || submittedRooms.length > validRoomTypes.length || submittedRooms.some((room) => !validRoomTypes.includes(room.type) || !Number.isInteger(room.rent) || room.rent < 500 || room.rent > 150000 || !Number.isInteger(room.deposit) || room.deposit < 0 || room.deposit > 1000000)) {
+      return { success: false, error: "Choose at least one valid room type, monthly rent, and security deposit." };
     }
     if (!contactPhone || !/^[6-9]\d{9}$/.test(contactPhone.replace(/\D/g, ""))) {
       return { success: false, error: "Please enter a valid 10-digit Indian contact phone number." };
+    }
+    if (!foodStatus) {
+      return { success: false, error: "Choose a valid food option." };
+    }
+
+    const photoFiles = formData.getAll("photos") as File[];
+    if (photoFiles.length > 5 || photoFiles.some((file) => file.size > 0 && (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024))) {
+      return { success: false, error: "Upload up to 5 JPG, PNG, or WEBP photos, each under 5 MB." };
     }
 
     // 3. Ensure User Profile & Owner Profile
@@ -133,10 +158,10 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
         slug,
         address: `${localityNameInput ? localityNameInput + ", " : ""}${address}`,
         gender: "CO_LIVING", // Valid enum value
-        food_status: foodAvailable ? "AVAILABLE" : "NOT_AVAILABLE",
+        food_status: foodStatus as "INCLUDED" | "AVAILABLE" | "NOT_AVAILABLE" | "BOTH",
         status: "DRAFT",
-        monthly_rent_from: rent,
-        monthly_rent_to: rent,
+        monthly_rent_from: Math.min(...submittedRooms.map((room) => room.rent)),
+        monthly_rent_to: Math.max(...submittedRooms.map((room) => room.rent)),
         description: description || null
       })
       .select("id, slug")
@@ -151,30 +176,17 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
     }
 
     // 7. Insert Room Configuration
-    const roomTypeEnumMap: Record<string, "PERSONAL" | "2_SHARING" | "3_SHARING" | "4_SHARING"> = {
-      "Single": "PERSONAL",
-      "2 Sharing": "2_SHARING",
-      "3 Sharing": "3_SHARING",
-      "4 Sharing": "4_SHARING",
-      "Other": "PERSONAL"
-    };
-
-    const mappedRoomType = roomTypeEnumMap[roomType] || "PERSONAL";
-    const bedsCount = roomType === "Single" ? 1 : roomType === "2 Sharing" ? 2 : roomType === "3 Sharing" ? 3 : 4;
-
     try {
-      await supabase.from("rooms").insert({
+      const { error: roomError } = await supabase.from("rooms").insert({
         pg_id: pg.id,
-        room_type: mappedRoomType,
-        rent,
-        security_deposit: null,
-        total_beds: bedsCount,
-        occupied_beds: 0,
-        food_available: foodAvailable,
-        availability_status: "AVAILABLE"
       });
+      if (roomError) {
+        console.error("Failed to create room:", roomError);
+        return { success: false, error: "Your PG was saved as a draft, but the room details could not be saved. Please contact support before submitting it again." };
+      }
     } catch (roomErr) {
-      console.error("Non-fatal: failed to create room record:", roomErr);
+      console.error("Failed to create room record:", roomErr);
+      return { success: false, error: "Your PG was saved as a draft, but the room details could not be saved. Please contact support before submitting it again." };
     }
 
     // 8. Link Selected Amenities
@@ -204,16 +216,10 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
     }
 
     // 9. Handle Uploaded Photos
-    const photoFiles = formData.getAll("photos") as File[];
-
     if (photoFiles && photoFiles.length > 0) {
       for (let i = 0; i < Math.min(photoFiles.length, 5); i++) {
         const file = photoFiles[i];
         if (!file || file.size === 0) continue;
-        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
-          return { success: false, error: "Photos must be JPG, PNG, or WEBP files under 5 MB." };
-        }
-
         try {
           const fileExt = file.name.split(".").pop() || "jpg";
           const fileName = `${pg.id}/${crypto.randomUUID()}.${fileExt}`;

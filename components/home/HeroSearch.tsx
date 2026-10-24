@@ -142,6 +142,7 @@ export function HeroSearch() {
                 <SelectItem value="included">Food Included</SelectItem>
                 <SelectItem value="available">Food Available</SelectItem>
                 <SelectItem value="none">No Food</SelectItem>
+                <SelectItem value="both">Food and no-food plans</SelectItem>
               </SelectContent>
             </Select>
           </div>

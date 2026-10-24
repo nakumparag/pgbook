@@ -6,7 +6,6 @@ import Link from "next/link";
 import { 
   Building2, 
   MapPin, 
-  IndianRupee, 
   Phone, 
   Check, 
   Loader2, 
@@ -33,9 +32,9 @@ interface LocalityOption {
 }
 
 const ROOM_TYPES = [
-  { value: "Single", label: "Single" },
-  { value: "2 Sharing", label: "2 Sharing" },
-  { value: "3 Sharing", label: "3 Sharing" },
+  { value: "Single", label: "Single Bed" },
+  { value: "2 Sharing", label: "Double Sharing" },
+  { value: "3 Sharing", label: "Triple Sharing" },
   { value: "4 Sharing", label: "4 Sharing" },
   { value: "Other", label: "Other" }
 ];
@@ -69,9 +68,11 @@ export default function ListPgForm() {
   // Form states
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [rent, setRent] = useState("");
-  const [roomType, setRoomType] = useState("Single");
-  const [foodAvailable, setFoodAvailable] = useState<"Yes" | "No">("Yes");
+  const [selectedRoomTypes, setSelectedRoomTypes] = useState<string[]>(["Single"]);
+  const [roomPrices, setRoomPrices] = useState<Record<string, { rent: string; deposit: string }>>({
+    Single: { rent: "", deposit: "0" },
+  });
+  const [foodAvailable, setFoodAvailable] = useState<"INCLUDED" | "AVAILABLE" | "NOT_AVAILABLE" | "BOTH">("INCLUDED");
   const [description, setDescription] = useState("");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([
     "WiFi",
@@ -192,7 +193,11 @@ export default function ListPgForm() {
 
     const trimmedName = name.trim();
     const trimmedAddress = address.trim();
-    const parsedRent = parseInt(rent, 10);
+    const roomConfigurations = selectedRoomTypes.map((type) => ({
+      type,
+      rent: Number(roomPrices[type]?.rent),
+      deposit: Number(roomPrices[type]?.deposit || 0),
+    }));
     const cleanPhone = contactPhone.replace(/\D/g, "");
 
     const selectedCity = cities.find((c) => c.id === cityId);
@@ -215,8 +220,8 @@ export default function ListPgForm() {
       setError("Please provide the Full Address.");
       return;
     }
-    if (isNaN(parsedRent) || parsedRent <= 0) {
-      setError("Please enter a valid monthly rent amount.");
+    if (roomConfigurations.length === 0 || roomConfigurations.some((room) => !Number.isInteger(room.rent) || room.rent <= 0 || !Number.isInteger(room.deposit) || room.deposit < 0)) {
+      setError("Add at least one room type and enter a valid rent and deposit for every selected room.");
       return;
     }
     if (!cleanPhone || cleanPhone.length !== 10) {
@@ -236,9 +241,8 @@ export default function ListPgForm() {
       formData.append("cityName", selectedCity?.name || "Ahmedabad");
       formData.append("localityName", selectedLocality?.name || "Sola");
       formData.append("address", trimmedAddress);
-      formData.append("rent", parsedRent.toString());
-      formData.append("roomType", roomType);
-      formData.append("foodAvailable", foodAvailable);
+      formData.append("rooms", JSON.stringify(roomConfigurations));
+      formData.append("foodStatus", foodAvailable);
       formData.append("description", description.trim());
       formData.append("amenities", JSON.stringify(selectedAmenities));
       formData.append("contactPhone", cleanPhone);
@@ -301,7 +305,8 @@ export default function ListPgForm() {
               setCityId("");
               setLocalityId("");
               setAddress("");
-              setRent("");
+              setSelectedRoomTypes(["Single"]);
+              setRoomPrices({ Single: { rent: "", deposit: "0" } });
               setDescription("");
               setPhotos([]);
               setPhotoPreviews([]);
@@ -401,39 +406,21 @@ export default function ListPgForm() {
           />
         </div>
 
-        {/* 5. Monthly Rent */}
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-foreground">
-            Monthly Rent (₹) <span className="text-destructive">*</span>
-          </label>
-          <div className="relative">
-            <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              type="number"
-              min={500}
-              max={150000}
-              required
-              placeholder="e.g. 6000"
-              value={rent}
-              onChange={(e) => setRent(e.target.value)}
-              className="pl-11 py-6 rounded-xl bg-muted/40 focus-visible:bg-transparent text-base font-semibold"
-            />
-          </div>
-        </div>
-
-        {/* 6. Room Type */}
+        {/* Room Types and Price */}
         <div className="space-y-3">
-          <label className="text-sm font-bold text-foreground">
-            Room Type <span className="text-destructive">*</span>
-          </label>
+          <label className="text-sm font-bold text-foreground">Room Types and Monthly Pricing <span className="text-destructive">*</span></label>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
             {ROOM_TYPES.map((rt) => {
-              const isSelected = roomType === rt.value;
+              const isSelected = selectedRoomTypes.includes(rt.value);
               return (
                 <button
                   type="button"
                   key={rt.value}
-                  onClick={() => setRoomType(rt.value)}
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    setSelectedRoomTypes((prev) => isSelected ? prev.filter((type) => type !== rt.value) : [...prev, rt.value]);
+                    if (!isSelected && !roomPrices[rt.value]) setRoomPrices((prev) => ({ ...prev, [rt.value]: { rent: "", deposit: "0" } }));
+                  }}
                   className={`py-3 px-3 rounded-xl border text-sm font-semibold transition-all text-center ${
                     isSelected 
                       ? "bg-primary text-primary-foreground border-primary shadow-sm" 
@@ -445,6 +432,17 @@ export default function ListPgForm() {
               );
             })}
           </div>
+          {selectedRoomTypes.map((type) => (
+            <div key={type} className="grid gap-3 rounded-xl border border-border bg-muted/20 p-4 sm:grid-cols-[1fr_1fr_1fr] sm:items-end">
+              <p className="font-semibold sm:pb-3">{ROOM_TYPES.find((room) => room.value === type)?.label}</p>
+              <label className="grid gap-1 text-xs font-semibold text-muted-foreground">Monthly rent (₹)
+                <Input type="number" min={500} max={150000} required placeholder="e.g. 6000" value={roomPrices[type]?.rent || ""} onChange={(e) => setRoomPrices((prev) => ({ ...prev, [type]: { rent: e.target.value, deposit: prev[type]?.deposit || "" } }))} />
+              </label>
+              <label className="grid gap-1 text-xs font-semibold text-muted-foreground">Security deposit (₹)
+                <Input type="number" min={0} max={1000000} required placeholder="e.g. 2000" value={roomPrices[type]?.deposit ?? "0"} onChange={(e) => setRoomPrices((prev) => ({ ...prev, [type]: { rent: prev[type]?.rent || "", deposit: e.target.value } }))} />
+              </label>
+            </div>
+          ))}
         </div>
 
         {/* 7. Food Available */}
@@ -453,7 +451,12 @@ export default function ListPgForm() {
             Food Available
           </label>
           <div className="flex gap-4">
-            {(["Yes", "No"] as const).map((choice) => {
+            {([
+              { value: "INCLUDED", label: "Included in rent" },
+              { value: "AVAILABLE", label: "Available at extra cost" },
+              { value: "NOT_AVAILABLE", label: "No food" },
+              { value: "BOTH", label: "Food and no-food plans" },
+            ] as const).map(({ value: choice, label }) => {
               const isSelected = foodAvailable === choice;
               return (
                 <button
@@ -466,11 +469,12 @@ export default function ListPgForm() {
                       : "bg-muted/40 text-foreground border-border hover:bg-muted"
                   }`}
                 >
-                  {choice === "Yes" ? "Yes (Food Provided)" : "No (Without Food)"}
+                  {label}
                 </button>
               );
             })}
           </div>
+          {foodAvailable === "BOTH" && <p className="text-xs text-muted-foreground">Mention the food and no-food rent in the description so guests can compare both plans.</p>}
         </div>
 
         {/* 8. Description */}

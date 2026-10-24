@@ -50,11 +50,12 @@ export default async function AdminDashboard() {
   const { data: pendingListings } = await supabase
     .from("pgs")
     .select(`
-      id, slug, name, description, address, gender, food_status, created_at,
+      id, slug, name, description, address, lat, lng, gender, food_status, available_from, rules, created_at,
       cities ( name ), localities ( name ),
       profiles!owner_id ( full_name, phone ),
       rooms ( room_type, rent, security_deposit, total_beds, occupied_beds ),
-      pg_images ( url, is_primary, display_order )
+      pg_images ( url, is_primary, display_order ),
+      pg_amenities ( amenities ( name ) )
     `)
     .eq("status", "PENDING")
     .order("created_at", { ascending: true })
@@ -141,8 +142,13 @@ export default async function AdminDashboard() {
                 <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-700">Pending review</span>
               </div>
               <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">{pg.description || "No description supplied."}</p>
-              <p className="mt-3 text-sm"><strong>Owner:</strong> {pg.profiles?.full_name || "Unknown"} · <strong>Contact:</strong> {pg.profiles?.phone || "Not provided"} · <strong>For:</strong> {String(pg.gender).replaceAll("_", " ")}</p>
+              <p className="mt-3 text-sm"><strong>Owner:</strong> {pg.profiles?.full_name || "Unknown"} · <strong>Contact:</strong> {pg.profiles?.phone || "Not provided"} · <strong>For:</strong> {String(pg.gender).replaceAll("_", " ")} · <strong>Food:</strong> {({ INCLUDED: "Included in rent", AVAILABLE: "Available at extra cost", NOT_AVAILABLE: "No food", BOTH: "Food and no-food plans" } as Record<string, string>)[pg.food_status] || "Not specified"}</p>
+              {pg.available_from && <p className="mt-2 text-sm"><strong>Available from:</strong> {new Date(`${pg.available_from}T00:00:00`).toLocaleDateString("en-IN")}</p>}
               <div className="mt-3 flex flex-wrap gap-2">{(pg.rooms || []).map((room: any, i: number) => <span key={`${room.room_type}-${i}`} className="rounded-lg bg-muted px-3 py-2 text-xs font-semibold">{String(room.room_type).replaceAll("_", " ")} · ₹{Number(room.rent).toLocaleString("en-IN")}/mo · {room.occupied_beds}/{room.total_beds} occupied</span>)}</div>
+              {(pg.rooms || []).length > 0 && <p className="mt-2 text-xs text-muted-foreground">Deposits: {(pg.rooms || []).map((room: any) => `${String(room.room_type).replaceAll("_", " ")} ₹${Number(room.security_deposit || 0).toLocaleString("en-IN")}`).join(" · ")}</p>}
+              {(pg.pg_amenities || []).length > 0 && <p className="mt-3 text-sm"><strong>Amenities:</strong> {pg.pg_amenities.map((item: any) => item.amenities?.name).filter(Boolean).join(" · ")}</p>}
+              {(pg.rules || []).length > 0 && <p className="mt-2 text-sm"><strong>Rules:</strong> {pg.rules.join(" · ")}</p>}
+              {pg.lat != null && pg.lng != null && <a className="mt-2 inline-block text-sm font-semibold text-primary hover:underline" href={`https://maps.google.com/?q=${pg.lat},${pg.lng}`} target="_blank" rel="noreferrer">View exact map pin</a>}
               <div className="mt-4 flex flex-wrap gap-2">
                 <form action={async () => { "use server"; await updatePgStatus(pg.id, "APPROVED"); }}><Button type="submit" size="sm">Approve listing</Button></form>
                 <form action={async () => { "use server"; await updatePgStatus(pg.id, "REJECTED"); }}><Button type="submit" size="sm" variant="outline">Reject</Button></form>

@@ -12,6 +12,7 @@ export interface SupabasePGListing {
   name: string;
   address: string;
   gender: string;
+  food_status?: "AVAILABLE" | "NOT_AVAILABLE" | "INCLUDED" | "BOTH";
   status: string;
   is_verified: boolean;
   rating: number;
@@ -37,7 +38,13 @@ export function PGCard({ pg }: { pg: SupabasePGListing }) {
   // Show max 3 amenities to keep card clean
   const topAmenities = amenitiesList.slice(0, 3);
   
-  const hasFood = amenitiesList.some(a => a.name.toLowerCase().includes("meal") || a.name.toLowerCase().includes("food"));
+  const foodLabel = pg.food_status === "INCLUDED"
+    ? "Food included"
+    : pg.food_status === "AVAILABLE"
+      ? "Food available"
+      : pg.food_status === "BOTH"
+        ? "Food + no-food plans"
+        : null;
 
   // Calculate minimum rent from rooms or monthly_rent_from
   const rentMin = (pg.rooms && pg.rooms.length > 0)
@@ -108,11 +115,7 @@ export function PGCard({ pg }: { pg: SupabasePGListing }) {
                 {amenity.name}
               </span>
             ))}
-            {hasFood && (
-              <span className="text-xs font-medium text-success bg-success/10 px-2 py-1 rounded-md">
-                Food Included
-              </span>
-            )}
+            {foodLabel && <span className="text-xs font-medium text-success bg-success/10 px-2 py-1 rounded-md">{foodLabel}</span>}
           </div>
         </CardContent>
 

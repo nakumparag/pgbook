@@ -1,0 +1,1 @@
+ALTER TYPE public.food_status ADD VALUE IF NOT EXISTS 'BOTH';
