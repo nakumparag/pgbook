@@ -24,7 +24,6 @@ export async function updateInquiryStatus(inquiryId: string, status: "CONTACTED"
 
   revalidatePath("/owner/dashboard");
   revalidatePath("/owner/inquiries");
-  revalidatePath("/admin/inquiries");
   revalidatePath("/dashboard");
   return { success: true };
 }

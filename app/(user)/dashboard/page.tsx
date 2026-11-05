@@ -1,11 +1,20 @@
-import { Heart, MessageSquare, ClipboardList } from "lucide-react";
+import { Heart, MessageSquare, ClipboardList, Building2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { PGCard } from "@/components/pg/PGCard";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function UserDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user?.id || "")
+    .maybeSingle();
+
+  const isOwner = profile?.role === "OWNER";
 
   // Fetch saved PGs (favorites)
   const { data: favorites } = await supabase
@@ -42,7 +51,32 @@ export default async function UserDashboard() {
     <div className="container-custom py-10">
       <div className="mb-10">
         <h1 className="text-4xl font-heading font-black mb-2 text-foreground tracking-tight">My Dashboard</h1>
-        <p className="text-muted-foreground font-medium text-lg">Your saved PGs and reviews, all in one place.</p>
+        <p className="text-muted-foreground font-medium text-lg">Your saved PGs and inquiries, all in one place.</p>
+      </div>
+
+      {/* PG Manager Quick Navigation Banner */}
+      <div className="mb-10 max-w-5xl rounded-3xl border border-indigo-200 dark:border-indigo-900/60 bg-linear-to-r from-indigo-50/70 via-card to-background dark:from-indigo-950/30 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm">
+            <Building2 className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-base text-foreground">
+              {isOwner ? "PG Business Manager" : "Own or manage a PG accommodation?"}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isOwner
+                ? "Switch to your property dashboard to manage floors, beds, tenants, and collections."
+                : "Track rooms, beds, tenants, digital KYC, and automated rent collection with PG Manager."}
+            </p>
+          </div>
+        </div>
+        <Button asChild className="rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 gap-1.5 shadow-sm text-xs h-10 px-4">
+          <Link href={isOwner ? "/owner/dashboard" : "/become-owner"}>
+            <span>{isOwner ? "Open PG Manager" : "Become a PG Owner"}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 max-w-5xl">

@@ -87,7 +87,18 @@ function PGManagerLoginForm() {
           if (tenant) {
             target = nextUrl || "/manager/tenant-portal";
           } else {
-            target = nextUrl || "/owner/dashboard";
+            // Check if user already owns any properties
+            const { count: pgCount } = await supabase
+              .from("pgs")
+              .select("id", { count: "exact", head: true })
+              .eq("owner_id", data.user.id);
+
+            if (pgCount && pgCount > 0) {
+              target = nextUrl || "/owner/dashboard";
+            } else {
+              // Normal user logging in to PG Manager -> take to 1-click owner onboarding
+              target = nextUrl || "/become-owner";
+            }
           }
         }
 

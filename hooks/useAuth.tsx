@@ -92,11 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq("user_id", session.user.id)
           .maybeSingle();
           
-        if (ownerData?.status === "APPROVED") {
-          setIsOwner(true);
-        } else {
-          setIsOwner(false);
-        }
+        const hasOwnerRole = profileData?.role === "OWNER" || profileData?.role === "ADMIN" || ownerData?.status === "APPROVED";
+        setIsOwner(hasOwnerRole);
       } else {
         setProfile(null);
         setIsOwner(false);
@@ -127,11 +124,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq("user_id", session.user.id)
           .maybeSingle();
           
-        if (ownerData?.status === "APPROVED") {
-          setIsOwner(true);
-        } else {
-          setIsOwner(false);
-        }
+        const hasOwnerRole = profileData?.role === "OWNER" || profileData?.role === "ADMIN" || ownerData?.status === "APPROVED";
+        setIsOwner(hasOwnerRole);
       } else {
         setProfile(null);
         setIsOwner(false);

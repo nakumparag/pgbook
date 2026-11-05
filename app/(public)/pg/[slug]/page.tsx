@@ -22,7 +22,7 @@ async function getPGBySlug(slug: string) {
     const { data, error } = await supabase
       .from("pgs")
       .select(`
-        id, slug, name, description, address, lat, lng, gender, rating, review_count, status, is_verified, owner_id, available_from, rules,
+        id, slug, name, description, address, lat, lng, gender, rating, review_count, status, is_publicly_listed, is_verified, owner_id, available_from, rules,
         cities ( name ), localities ( name ),
         rooms ( id, room_type, rent, total_beds, occupied_beds, security_deposit, electricity_charges, maintenance_charges, other_charges ),
         pg_images ( url, is_primary, category ),
@@ -33,6 +33,11 @@ async function getPGBySlug(slug: string) {
       .maybeSingle();
 
     if (error || !data) return null;
+
+    // Private PG protection: Do not allow public visitors to view unlisted PGs
+    if ((data as any).is_publicly_listed === false) {
+      return null;
+    }
 
     const { data: reviews } = await supabase
       .from("reviews")

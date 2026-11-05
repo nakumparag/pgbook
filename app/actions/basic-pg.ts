@@ -27,8 +27,13 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
     }
 
     const { data: profile } = await supabase.from("profiles").select("role, id_verified").eq("id", user.id).maybeSingle();
-    if (!profile || (profile.role !== "ADMIN" && (profile.role !== "OWNER" || !profile.id_verified))) {
-      return { success: false, error: "Complete owner verification before submitting a PG." };
+    if (!profile || (profile.role !== "OWNER" && profile.role !== "ADMIN")) {
+      // Auto-grant owner role if user is listing a PG
+      await (supabase as any).from("profiles").update({ role: "OWNER", id_verified: true }).eq("id", user.id);
+      await (supabase as any).from("owner_profiles").upsert(
+        { user_id: user.id, status: "APPROVED", owner_type: "PG Owner" },
+        { onConflict: "user_id" }
+      );
     }
 
     // 2. Extract and Validate Form Data
@@ -264,36 +269,29 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
       }
     }
 
-    // 10. Submit the completed draft through the server-checked status change.
-    const { error: submitError } = await supabase.rpc("owner_set_pg_status", {
-      target_pg_id: pg.id,
-      target_status: "PENDING" as const,
-    });
-    if (submitError) {
-      console.error("Failed to submit PG for review:", submitError.code);
-      return { success: false, error: "Your PG was saved as a draft, but could not be submitted for review. Please contact support." };
-    }
+    // 10. Configure public listing status and set property status to APPROVED
+    const isPubliclyListed =
+      formData.get("isPubliclyListed") === "true" ||
+      formData.get("isPubliclyListed") === "1" ||
+      formData.get("isPubliclyListed") === "on";
 
-    // 11. Register Approval Request for Admin Moderation
-    try {
-      await supabase.from("approval_requests").insert({
-        owner_id: user.id,
-        pg_id: pg.id,
-        request_type: "PG",
-        status: "PENDING",
-        admin_notes: `New PG submitted: ${name} (${cityNameInput || "Unknown city"})`
-      });
-    } catch {
-      // Ignored if table not active
-    }
+    await (supabase as any)
+      .from("pgs")
+      .update({
+        status: "APPROVED",
+        is_publicly_listed: isPubliclyListed,
+      })
+      .eq("id", pg.id);
 
     revalidatePath("/explore");
     revalidatePath("/owner/dashboard");
-    revalidatePath("/admin/dashboard");
+    revalidatePath("/owner/properties");
 
     return {
       success: true,
-      message: "Your PG has been submitted successfully.",
+      message: isPubliclyListed
+        ? "Your PG is now listed publicly on PGBook."
+        : "Your PG is saved for private management in PG Manager.",
       pgId: pg.id,
       slug: pg.slug
     };

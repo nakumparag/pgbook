@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, CheckCircle2, Loader2, LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, LogOut, ShieldCheck, UserRound, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { createClient } from "@/lib/supabase/client";
@@ -144,9 +144,25 @@ export default function ProfilePage() {
           </section>
 
           <section className="space-y-3 rounded-3xl border border-border bg-card p-5 shadow-sm">
-            {profile?.role === "ADMIN" && <Button asChild variant="outline" className="w-full rounded-xl"><Link href="/admin/dashboard"><ShieldCheck className="mr-2 h-4 w-4" />Admin dashboard</Link></Button>}
-            {isOwner && <Button asChild variant="outline" className="w-full rounded-xl"><Link href="/owner/dashboard">Owner dashboard</Link></Button>}
-            <Button type="button" variant="ghost" onClick={logout} className="w-full rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"><LogOut className="mr-2 h-4 w-4" />Sign out</Button>
+            {isOwner ? (
+              <Button asChild className="w-full rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm">
+                <Link href="/owner/dashboard">
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Open PG Manager
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild variant="outline" className="w-full rounded-xl font-bold border-primary/30 text-primary hover:bg-primary/5">
+                <Link href="/become-owner">
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Become a PG Owner
+                </Link>
+              </Button>
+            )}
+            <Button type="button" variant="ghost" onClick={logout} className="w-full rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </Button>
           </section>
         </aside>
 

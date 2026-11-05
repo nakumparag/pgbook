@@ -81,6 +81,7 @@ export default function ListPgForm() {
     "Power Backup"
   ]);
   const [contactPhone, setContactPhone] = useState("");
+  const [isPubliclyListed, setIsPubliclyListed] = useState(false);
   
   // Photos state
   const [photos, setPhotos] = useState<File[]>([]);
@@ -275,6 +276,7 @@ export default function ListPgForm() {
       formData.append("description", description.trim());
       formData.append("amenities", JSON.stringify(selectedAmenities));
       formData.append("contactPhone", cleanPhone);
+      formData.append("isPubliclyListed", String(isPubliclyListed));
 
       photos.forEach((photo) => {
         formData.append("photos", photo);
@@ -309,49 +311,23 @@ export default function ListPgForm() {
   if (isSuccess) {
     return (
       <div className="bg-card rounded-3xl p-8 md:p-12 border border-border shadow-xl text-center max-w-xl mx-auto my-8">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 className="w-10 h-10 text-green-600" />
+        <div className="w-20 h-20 bg-green-100 dark:bg-green-950/40 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
         </div>
         <h2 className="text-3xl font-heading font-black text-foreground mb-3">
-          Your PG has been submitted successfully.
+          Property Added Successfully!
         </h2>
         <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-          Thank you for submitting your property. It is <span className="font-bold text-foreground">pending admin review</span> and will appear in Explore after approval.
+          {isPubliclyListed
+            ? "Your property is now listed publicly on PGBook and active in PG Manager."
+            : "Your property is configured for private management in PG Manager. It will not appear in public search."}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button asChild size="lg" className="rounded-xl py-6 font-bold text-base bg-indigo-600 hover:bg-indigo-500 text-white">
+            <Link href="/owner/properties">View All Properties</Link>
+          </Button>
           <Button asChild variant="outline" size="lg" className="rounded-xl py-6 font-semibold text-base border-2">
-            <Link href="/owner/dashboard">Manage My Listing</Link>
-          </Button>
-          <Button asChild size="lg" className="rounded-xl py-6 font-bold text-base">
-            <Link href="/explore">
-              Explore All PGs <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="rounded-xl py-6 font-semibold text-base border-2"
-            onClick={() => {
-              setIsSuccess(false);
-              setName("");
-              if (cities.length > 0) {
-                const defaultCity = cities.find((c) => c.name.toLowerCase() === "ahmedabad") || cities[0];
-                setCityId(defaultCity.id);
-                const defaultLocs = localities.filter((l) => l.city_id === defaultCity.id);
-                setLocalityId(defaultLocs[0]?.id || "");
-              } else {
-                setCityId("");
-                setLocalityId("");
-              }
-              setAddress("");
-              setSelectedRoomTypes(["Single"]);
-              setRoomPrices({ Single: { rent: "", deposit: "0" } });
-              setDescription("");
-              setPhotos([]);
-              setPhotoPreviews([]);
-            }}
-          >
-            List Another PG
+            <Link href="/owner/dashboard">Open Dashboard</Link>
           </Button>
         </div>
       </div>
@@ -648,6 +624,32 @@ export default function ListPgForm() {
           <p className="text-xs text-muted-foreground">
             This number is saved to your owner profile. Interested users contact you through PGBook inquiries.
           </p>
+        </div>
+
+        {/* 11.5 Optional Public Listing on PGBook */}
+        <div className="p-5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/60 space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h4 className="font-heading font-bold text-sm text-foreground">
+                List Publicly on PGBook?
+              </h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                If ON, students and seekers can discover and send inquiries for this PG on PGBook. If OFF, it remains strictly private in PG Manager.
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={isPubliclyListed}
+                onChange={(e) => setIsPubliclyListed(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+            </label>
+          </div>
+          <span className="text-[11px] font-bold inline-block px-3 py-1 rounded-full bg-background border border-border">
+            {isPubliclyListed ? "🟢 Public Listing ON (Searchable on PGBook)" : "⚪ Private Management Only (Unlisted)"}
+          </span>
         </div>
 
         {/* 12. Submit PG Button */}

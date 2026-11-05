@@ -33,10 +33,9 @@ import {
 import { getPgManagerUrl } from "@/lib/site";
 
 const NAV_LINKS = [
+  { href: "/", label: "Home" },
   { href: "/explore", label: "Explore PGs" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
+  { href: "/become-owner", label: "List Your PG" },
 ];
 
 export function Navbar() {
@@ -151,13 +150,13 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="cursor-pointer flex items-center gap-2 py-2">
                       <UserCircle className="h-4 w-4 text-muted-foreground" />
-                      <span>My Profile</span>
+                      <span>My Profile ({profile?.role || "USER"})</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard" className="cursor-pointer flex items-center gap-2 py-2">
                       <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                      <span>Saved & Bookings</span>
+                      <span>Saved & Inquiries</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -167,15 +166,27 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href={pgManagerUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer flex items-center justify-between py-2 text-primary font-semibold">
-                      <span className="flex items-center gap-2">
-                        <Building className="h-4 w-4" />
-                        <span>Open PG Manager</span>
-                      </span>
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    </a>
-                  </DropdownMenuItem>
+                  {profile?.role === "OWNER" ? (
+                    <DropdownMenuItem asChild>
+                      <a href={pgManagerUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer flex items-center justify-between py-2 text-indigo-600 dark:text-indigo-400 font-bold">
+                        <span className="flex items-center gap-2">
+                          <Building className="h-4 w-4" />
+                          <span>PG Manager Dashboard</span>
+                        </span>
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </a>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem asChild>
+                      <Link href="/become-owner" className="cursor-pointer flex items-center justify-between py-2 text-primary font-bold">
+                        <span className="flex items-center gap-2">
+                          <Building className="h-4 w-4" />
+                          <span>Become a PG Owner</span>
+                        </span>
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={signOut}

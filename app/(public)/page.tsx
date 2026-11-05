@@ -34,16 +34,38 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data: pgs } = await supabase
-    .from("pgs")
-    .select(`
-      id, slug, name, description, address, gender, rating, review_count, status, is_verified,
-      cities ( name ), localities ( name ),
-      rooms ( id, room_type, rent, total_beds, occupied_beds ),
-      pg_images ( url, is_primary ),
-      pg_amenities ( amenities ( id, name, icon, category ) )
-    `)
-    .eq("status", "APPROVED");
+  let pgs: any[] = [];
+  try {
+    const { data, error } = await supabase
+      .from("pgs")
+      .select(`
+        id, slug, name, description, address, gender, rating, review_count, status, is_publicly_listed, is_verified,
+        cities ( name ), localities ( name ),
+        rooms ( id, room_type, rent, total_beds, occupied_beds ),
+        pg_images ( url, is_primary ),
+        pg_amenities ( amenities ( id, name, icon, category ) )
+      `)
+      .eq("status", "APPROVED")
+      .eq("is_publicly_listed", true);
+
+    if (error) {
+      const { data: fallbackData } = await supabase
+        .from("pgs")
+        .select(`
+          id, slug, name, description, address, gender, rating, review_count, status, is_verified,
+          cities ( name ), localities ( name ),
+          rooms ( id, room_type, rent, total_beds, occupied_beds ),
+          pg_images ( url, is_primary ),
+          pg_amenities ( amenities ( id, name, icon, category ) )
+        `)
+        .eq("status", "APPROVED");
+      pgs = (fallbackData || []).filter((p: any) => p.is_publicly_listed !== false);
+    } else {
+      pgs = data || [];
+    }
+  } catch {
+    pgs = [];
+  }
 
   return (
     <div className="flex flex-col min-h-screen gap-y-8 md:gap-y-12 pb-16">

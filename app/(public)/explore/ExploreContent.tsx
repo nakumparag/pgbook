@@ -79,17 +79,30 @@ export default function ExploreContent({ searchParams }: ExploreContentProps) {
       setLoading(true);
       setLoadError(false);
       try {
-        const { data, error } = await supabase
+        const query = supabase
           .from("pgs")
           .select(`
-          id, slug, name, address, gender, food_status, status, is_verified, rating, review_count, description, created_at, monthly_rent_from, monthly_rent_to,
+            id, slug, name, address, gender, food_status, status, is_publicly_listed, is_verified, rating, review_count, description, created_at, monthly_rent_from, monthly_rent_to,
             cities ( name ), localities ( name ), rooms ( rent, room_type ),
             pg_images ( url, is_primary ), pg_amenities ( amenities ( name, icon, category ) )
           `)
           .eq("status", "APPROVED");
 
-        if (error) throw error;
-        setRealListings(data || []);
+        // Public discovery: only show properties with is_publicly_listed = true
+        const { data, error } = await query.eq("is_publicly_listed", true);
+
+        if (error) {
+          // Graceful fallback if is_publicly_listed column is pending migration execution
+          const { data: fallbackData, error: fallbackError } = await query;
+          if (fallbackError) throw fallbackError;
+          // Filter in-memory if field exists on rows
+          const filtered = (fallbackData || []).filter(
+            (p: any) => p.is_publicly_listed !== false
+          );
+          setRealListings(filtered);
+        } else {
+          setRealListings(data || []);
+        }
       } catch {
         setRealListings([]);
         setLoadError(true);

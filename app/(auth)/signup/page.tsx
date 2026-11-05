@@ -16,8 +16,6 @@ function SignupContent() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isOwner, setIsOwner] = useState(false);
-  const [ownerType, setOwnerType] = useState("PG Owner");
 
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -104,9 +102,8 @@ function SignupContent() {
         options: {
           data: {
             full_name: trimmedName,
-            role: isOwner ? "OWNER" : "USER",
+            role: "USER",
             phone: trimmedPhone || null,
-            owner_type: isOwner ? ownerType : null
           },
           emailRedirectTo: `${getAppUrl()}/auth/callback`,
         }
@@ -150,11 +147,7 @@ function SignupContent() {
             .eq('id', signUpData.user.id);
         }
 
-        if (isOwner) {
-          router.replace('/become-owner');
-        } else {
-          router.replace(getSafeRedirectUrl());
-        }
+        router.replace(getSafeRedirectUrl());
         router.refresh();
         return;
       }
@@ -266,34 +259,6 @@ function SignupContent() {
                   pattern="[0-9]{10}"
                 />
               </div>
-            </div>
-
-            <div className="p-4 bg-muted/30 rounded-xl border border-border">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  name="isOwner" 
-                  checked={isOwner}
-                  onChange={(e) => setIsOwner(e.target.checked)}
-                  className="w-5 h-5 rounded border-muted-foreground text-primary focus:ring-primary"
-                />
-                <span className="font-semibold text-foreground">I want to list my PG/Property</span>
-              </label>
-              
-              {isOwner && (
-                <div className="mt-4 space-y-2">
-                  <label className="text-sm font-semibold text-foreground ml-1">Owner Type</label>
-                  <select 
-                    name="ownerType" 
-                    value={ownerType}
-                    onChange={(e) => setOwnerType(e.target.value)}
-                    className="w-full pl-4 py-3 rounded-xl bg-muted/50 focus-visible:bg-transparent border border-border outline-none"
-                  >
-                    <option value="PG Owner">PG Owner</option>
-                    <option value="Property Owner">Property Owner</option>
-                  </select>
-                </div>
-              )}
             </div>
 
             <div className="space-y-2">

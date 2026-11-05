@@ -5,6 +5,7 @@ import { Plus, Building2, MapPin, BedDouble, Users, Wifi, UserCheck, ExternalLin
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { PropertyListingToggle } from "@/components/owner/PropertyListingToggle";
 import { getOwnerProperties } from "@/app/actions/business_properties";
 import { formatCurrency } from "@/lib/utils";
 
@@ -68,6 +69,15 @@ export default async function OwnerPropertiesPage() {
                   <StatusBadge status={prop.status} />
                 </div>
 
+                {/* Optional PGBook Public Listing Toggle */}
+                <div className="pt-1 pb-1">
+                  <PropertyListingToggle
+                    propertyId={prop.id}
+                    initialListed={prop.isPubliclyListed}
+                    propertyName={prop.name}
+                  />
+                </div>
+
                 {/* Capacity & Occupancy Badges */}
                 <div className="grid grid-cols-3 gap-2 py-2 px-3 rounded-xl bg-muted/40 border border-border/40 text-center">
                   <div>
@@ -118,11 +128,17 @@ export default async function OwnerPropertiesPage() {
                     Dashboard
                   </Link>
                 </Button>
-                <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground">
-                  <Link href={`/pg/${prop.slug}`} target="_blank" title="View Public Listing">
+                {prop.isPubliclyListed ? (
+                  <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-emerald-600 hover:text-emerald-700">
+                    <Link href={`/pg/${prop.slug}`} target="_blank" title="View Public Listing on PGBook">
+                      <ExternalLink className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="icon" disabled className="h-8 w-8 rounded-lg text-muted-foreground/40" title="Private management (not listed publicly on PGBook)">
                     <ExternalLink className="w-4 h-4" />
-                  </Link>
-                </Button>
+                  </Button>
+                )}
               </div>
             </div>
           ))}

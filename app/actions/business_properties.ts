@@ -18,6 +18,7 @@ export interface PropertyOverview {
   vacantBeds: number;
   monthlyRevenue: number;
   status: string;
+  isPubliclyListed: boolean;
   wifiSsid?: string | null;
   rules?: string | null;
   managerName?: string | null;
@@ -37,7 +38,7 @@ export async function getOwnerProperties(): Promise<{ properties: PropertyOvervi
     const { data: pgs, error } = await supabase
       .from("pgs")
       .select(`
-        id, name, slug, address, status, floors_count, total_rooms, rules, wifi_ssid, manager_name, manager_phone,
+        id, name, slug, address, status, is_publicly_listed, floors_count, total_rooms, rules, wifi_ssid, manager_name, manager_phone,
         cities ( name ), localities ( name ),
         rooms ( id, room_type, rent, total_beds, occupied_beds )
       `)
@@ -76,6 +77,7 @@ export async function getOwnerProperties(): Promise<{ properties: PropertyOvervi
         vacantBeds: Math.max(0, totalBeds - occupiedBeds),
         monthlyRevenue,
         status: pg.status,
+        isPubliclyListed: !!pg.is_publicly_listed,
         wifiSsid: pg.wifi_ssid,
         rules: pg.rules,
         managerName: pg.manager_name,
@@ -237,4 +239,77 @@ export async function updatePropertyOperations(propertyId: string, payload: {
     return { success: false, error: err.message };
   }
 }
+
+// Toggle public listing on PGBook (Scenario C & D)
+export async function togglePropertyPublicListing(
+  propertyId: string,
+  shouldList: boolean
+): Promise<{ success: boolean; isPubliclyListed?: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    // Try secure RPC first
+    try {
+      const { data: rpcData, error: rpcErr } = await (supabase as any).rpc(
+        "toggle_pg_public_listing",
+        {
+          target_pg_id: propertyId,
+          should_list: shouldList,
+        }
+      );
+
+      if (!rpcErr && rpcData?.success) {
+        revalidatePath("/owner/properties");
+        revalidatePath("/explore");
+        revalidatePath("/owner/dashboard");
+        return { success: true, isPubliclyListed: shouldList };
+      }
+    } catch {
+      // Fallback to direct query
+    }
+
+    // Direct update
+    const { data: pg, error: fetchErr } = await (supabase as any)
+      .from("pgs")
+      .select("id, slug, owner_id")
+      .eq("id", propertyId)
+      .single();
+
+    if (fetchErr || !pg || pg.owner_id !== user.id) {
+      return { success: false, error: "Property not found or unauthorized" };
+    }
+
+    const { error: updateErr } = await (supabase as any)
+      .from("pgs")
+      .update({
+        is_publicly_listed: shouldList,
+        ...(shouldList ? { status: "APPROVED" } : {}),
+      })
+      .eq("id", propertyId)
+      .eq("owner_id", user.id);
+
+    if (updateErr) {
+      return { success: false, error: updateErr.message };
+    }
+
+    revalidatePath("/owner/properties");
+    revalidatePath("/explore");
+    revalidatePath("/owner/dashboard");
+    if (pg.slug) {
+      revalidatePath(`/pg/${pg.slug}`);
+    }
+
+    return { success: true, isPubliclyListed: shouldList };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to toggle public listing" };
+  }
+}
+
 

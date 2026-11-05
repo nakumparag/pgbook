@@ -27,6 +27,63 @@ export type OwnerVerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CHA
 export interface Database {
   public: {
     Tables: {
+      // ── organizations ──────────────────────────────────
+      organizations: {
+        Row: {
+          id: string
+          name: string
+          owner_id: string
+          phone: string | null
+          city: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          owner_id: string
+          phone?: string | null
+          city?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          city?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
+      // ── organization_members ────────────────────────────
+      organization_members: {
+        Row: {
+          id: string
+          organization_id: string
+          user_id: string
+          role: 'OWNER' | 'MANAGER' | 'STAFF'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          user_id: string
+          role?: 'OWNER' | 'MANAGER' | 'STAFF'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          user_id?: string
+          role?: 'OWNER' | 'MANAGER' | 'STAFF'
+          created_at?: string
+        }
+        Relationships: []
+      }
+
       // ── profiles ────────────────────────────────────────
       profiles: {
         Row: {
@@ -359,6 +416,8 @@ export interface Database {
           contact_phone: string | null
           whatsapp_number: string | null
           rules: string | string[] | null
+          is_publicly_listed?: boolean | null
+          organization_id?: string | null
           floors_count?: number | null
           total_rooms?: number | null
           checkin_time?: string | null
@@ -397,6 +456,8 @@ export interface Database {
           contact_phone?: string | null
           whatsapp_number?: string | null
           rules?: string | string[] | null
+          is_publicly_listed?: boolean | null
+          organization_id?: string | null
           floors_count?: number | null
           total_rooms?: number | null
           checkin_time?: string | null
@@ -434,6 +495,8 @@ export interface Database {
           contact_phone?: string | null
           whatsapp_number?: string | null
           rules?: string | string[] | null
+          is_publicly_listed?: boolean | null
+          organization_id?: string | null
           floors_count?: number | null
           total_rooms?: number | null
           checkin_time?: string | null

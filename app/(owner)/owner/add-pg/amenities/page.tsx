@@ -90,7 +90,7 @@ export function AmenitiesContent({ basePath = "/owner/add-pg" }: { basePath?: st
       {amenities.length === 0 ? (
         <div className="bg-card rounded-2xl p-12 text-center border border-border">
           <p className="text-muted-foreground font-medium">No amenities found in the database.</p>
-          <p className="text-sm text-muted-foreground mt-1">Ask your admin to seed the amenities table.</p>
+          <p className="text-sm text-muted-foreground mt-1">Please configure amenities in settings.</p>
         </div>
       ) : (
         <div className="space-y-6 mb-8">

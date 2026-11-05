@@ -70,10 +70,10 @@ export function PreviewContent({ basePath = "/owner/add-pg" }: { basePath?: stri
         <div className="w-24 h-24 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
           <ShieldCheck className="w-12 h-12 text-success" />
         </div>
-        <h2 className="text-3xl font-heading font-black mb-4">Submitted for Verification!</h2>
-        <p className="text-muted-foreground text-lg mb-2">Your PG listing has been submitted successfully.</p>
-        <Badge variant="outline" className="text-yellow-600 border-yellow-300 bg-yellow-50 mb-8 text-sm px-4 py-1">PENDING REVIEW</Badge>
-        <p className="text-muted-foreground text-sm mb-8">Our admin team will review your listing shortly. Once approved, it will be visible to all users on PGBook.</p>
+        <h2 className="text-3xl font-heading font-black mb-4">Property Registered Successfully!</h2>
+        <p className="text-muted-foreground text-lg mb-2">Your PG property is now ready in PG Manager.</p>
+        <Badge variant="outline" className="text-emerald-600 border-emerald-300 bg-emerald-50 mb-8 text-sm px-4 py-1">ACTIVE</Badge>
+        <p className="text-muted-foreground text-sm mb-8">You can manage floors, rooms, beds, tenants, and collections immediately, and toggle public listing anytime from your Properties page.</p>
         <Link href="/owner/dashboard">
           <Button size="lg" className="rounded-xl font-bold h-14 px-8">Go to Dashboard</Button>
         </Link>

@@ -15,6 +15,6 @@ export async function upgradeToOwner(formData?: FormData) {
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   if (profile?.role === "OWNER" || profile?.role === "ADMIN") redirect("/owner/add-pg");
 
-  // Owner access is granted only after the admin approves the submitted ID.
-  redirect("/become-owner/verification");
+  // Redirect user to the clean owner onboarding page
+  redirect("/become-owner");
 }

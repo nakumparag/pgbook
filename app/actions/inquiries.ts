@@ -22,6 +22,17 @@ export async function submitInquiry(pgId: string, message: string) {
     return { success: false as const, error: "Add a valid phone number to your profile before sending an inquiry.", profileRequired: true };
   }
 
+  // Verify target PG is publicly listed on PGBook
+  const { data: targetPg } = await (supabase as any)
+    .from("pgs")
+    .select("id, is_publicly_listed, status")
+    .eq("id", parsed.data.pgId)
+    .maybeSingle();
+
+  if (!targetPg || targetPg.status !== "APPROVED" || targetPg.is_publicly_listed === false) {
+    return { success: false as const, error: "This property is managed privately and is not accepting public inquiries." };
+  }
+
   const { error } = await supabase.from("inquiries").insert({
     user_id: user.id,
     pg_id: parsed.data.pgId,
@@ -38,6 +49,5 @@ export async function submitInquiry(pgId: string, message: string) {
 
   revalidatePath("/dashboard");
   revalidatePath("/owner/inquiries");
-  revalidatePath("/admin/inquiries");
   return { success: true as const };
 }
