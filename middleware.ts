@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
     '/login': '/manager/login',
     '/signup': '/manager/signup',
     '/forgot-password': '/manager/forgot-password',
-    '/reset-password': '/reset-password',
+    '/reset-password': '/manager/reset-password',
     '/dashboard': '/owner/dashboard',
     '/properties': '/owner/properties',
     '/rooms': '/owner/rooms',

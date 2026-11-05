@@ -198,3 +198,4 @@ GRANT EXECUTE ON FUNCTION public.onboard_pg_owner(TEXT, TEXT, TEXT) TO authentic
 GRANT EXECUTE ON FUNCTION public.toggle_pg_public_listing(UUID, BOOLEAN) TO authenticated;
 
 NOTIFY pgrst, 'reload schema';
+

@@ -93,8 +93,9 @@ export default function ProfilePage() {
     setSendingReset(true);
     setError("");
     setNotice("");
+    const origin = typeof window !== "undefined" && window.location.origin ? window.location.origin : "";
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${origin}/auth/callback?next=/reset-password`,
     });
     if (resetError) setError("Couldn't send the reset email. Please try again.");
     else setNotice("Password reset link sent to your email.");
