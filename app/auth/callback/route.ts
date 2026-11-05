@@ -16,8 +16,10 @@ export async function GET(request: Request) {
     : requestUrl.origin
 
   // Ensure we only redirect to a relative URL to prevent Open Redirect vulnerabilities
-  const defaultNext = type === 'recovery' ? '/reset-password' : '/dashboard'
+  const isManagerFlow = next?.includes('owner') || next?.includes('manager')
+  const defaultNext = type === 'recovery' ? '/reset-password' : (isManagerFlow ? '/owner/dashboard' : '/dashboard')
   const safeNext = (next && next.startsWith('/') && !next.startsWith('//')) ? next : defaultNext
+  const fallbackLogin = isManagerFlow ? '/manager/login' : '/login'
 
   const supabase = await createClient()
 
@@ -25,13 +27,13 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       console.error("Auth callback code exchange error:", error.message)
-      return NextResponse.redirect(new URL('/login?error=auth_callback_failed', redirectBase))
+      return NextResponse.redirect(new URL(`${fallbackLogin}?error=auth_callback_failed`, redirectBase))
     }
   } else if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash, type })
     if (error) {
       console.error("Auth callback verifyOtp error:", error.message)
-      return NextResponse.redirect(new URL('/login?error=verification_failed', redirectBase))
+      return NextResponse.redirect(new URL(`${fallbackLogin}?error=verification_failed`, redirectBase))
     }
   }
 

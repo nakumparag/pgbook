@@ -29,7 +29,7 @@ export function DetailsContent({ basePath = "/owner/add-pg" }: { basePath?: stri
           setGender(pg.gender || "");
           setFoodStatus(pg.food_status || "");
           setAvailableFrom(pg.available_from || "");
-          setRules(pg.rules ? pg.rules.join("\n") : "");
+          setRules(pg.rules ? (Array.isArray(pg.rules) ? pg.rules.join("\n") : String(pg.rules)) : "");
         }
       });
     }

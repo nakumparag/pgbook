@@ -64,6 +64,7 @@ export default function ListPgForm() {
   const [localities, setLocalities] = useState<LocalityOption[]>([]);
   const [cityId, setCityId] = useState<string>("");
   const [localityId, setLocalityId] = useState<string>("");
+  const [loadingLocations, setLoadingLocations] = useState<boolean>(true);
 
   // Form states
   const [name, setName] = useState("");
@@ -108,26 +109,48 @@ export default function ListPgForm() {
       }
       setCheckingAuth(false);
 
-      // Load latest cities and localities from database
+      // Load latest cities and localities from database concurrently
       try {
-        const { data: dbCities } = await supabase
-          .from("cities")
-          .select("id, name")
-          .eq("is_active", true)
-          .order("name");
-        if (dbCities && dbCities.length > 0) {
-          setCities(dbCities);
+        const [citiesRes, locsRes] = await Promise.all([
+          supabase
+            .from("cities")
+            .select("id, name")
+            .eq("is_active", true)
+            .order("name"),
+          supabase
+            .from("localities")
+            .select("id, name, city_id")
+            .order("name"),
+        ]);
+
+        const dbCities = (citiesRes.data || []) as CityOption[];
+        const dbLocs = (locsRes.data || []) as LocalityOption[];
+
+        if (citiesRes.error) {
+          console.error("Cities fetch error:", citiesRes.error);
+        }
+        if (locsRes.error) {
+          console.error("Localities fetch error:", locsRes.error);
         }
 
-        const { data: dbLocs } = await supabase
-          .from("localities")
-          .select("id, name, city_id")
-          .order("name");
-        if (dbLocs && dbLocs.length > 0) {
-          setLocalities(dbLocs);
+        setCities(dbCities);
+        setLocalities(dbLocs);
+
+        if (dbCities.length > 0) {
+          // Default to Ahmedabad if present, otherwise first city
+          const defaultCity = dbCities.find((c) => c.name.toLowerCase() === "ahmedabad") || dbCities[0];
+          setCityId(defaultCity.id);
+
+          const defaultLocs = dbLocs.filter((l) => l.city_id === defaultCity.id);
+          if (defaultLocs.length > 0) {
+            setLocalityId(defaultLocs[0].id);
+          }
         }
-      } catch {
+      } catch (err) {
+        console.error("Failed to load cities/localities:", err);
         setError("Couldn't load the city list. Refresh the page and try again.");
+      } finally {
+        setLoadingLocations(false);
       }
     }
     checkAuthAndLoadLocations();
@@ -136,12 +159,18 @@ export default function ListPgForm() {
   // Available localities for currently selected city
   const availableLocalities = localities.filter((l) => l.city_id === cityId);
 
-  // Sync locality when city changes if current locality is not in the city
+  // Sync locality when city changes
   const handleCityChange = (newCityId: string) => {
     setCityId(newCityId);
+    if (!newCityId) {
+      setLocalityId("");
+      return;
+    }
     const validLocs = localities.filter((l) => l.city_id === newCityId);
     if (validLocs.length > 0) {
       setLocalityId(validLocs[0].id);
+    } else {
+      setLocalityId("");
     }
   };
 
@@ -220,12 +249,12 @@ export default function ListPgForm() {
       setError("Please provide the Full Address.");
       return;
     }
-    if (roomConfigurations.length === 0 || roomConfigurations.some((room) => !Number.isInteger(room.rent) || room.rent <= 0 || !Number.isInteger(room.deposit) || room.deposit < 0)) {
-      setError("Add at least one room type and enter a valid rent and deposit for every selected room.");
+    if (roomConfigurations.length === 0 || roomConfigurations.some((room) => !Number.isInteger(room.rent) || room.rent < 500 || room.rent > 150000 || !Number.isInteger(room.deposit) || room.deposit < 0 || room.deposit > 1000000)) {
+      setError("Add at least one room type and enter a valid monthly rent (₹500 - ₹1,50,000) and security deposit.");
       return;
     }
-    if (!cleanPhone || cleanPhone.length !== 10) {
-      setError("Please enter a valid 10-digit Indian mobile number.");
+    if (!cleanPhone || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.");
       return;
     }
 
@@ -290,6 +319,9 @@ export default function ListPgForm() {
           Thank you for submitting your property. It is <span className="font-bold text-foreground">pending admin review</span> and will appear in Explore after approval.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button asChild variant="outline" size="lg" className="rounded-xl py-6 font-semibold text-base border-2">
+            <Link href="/owner/dashboard">Manage My Listing</Link>
+          </Button>
           <Button asChild size="lg" className="rounded-xl py-6 font-bold text-base">
             <Link href="/explore">
               Explore All PGs <ArrowRight className="w-5 h-5 ml-2" />
@@ -302,8 +334,15 @@ export default function ListPgForm() {
             onClick={() => {
               setIsSuccess(false);
               setName("");
-              setCityId("");
-              setLocalityId("");
+              if (cities.length > 0) {
+                const defaultCity = cities.find((c) => c.name.toLowerCase() === "ahmedabad") || cities[0];
+                setCityId(defaultCity.id);
+                const defaultLocs = localities.filter((l) => l.city_id === defaultCity.id);
+                setLocalityId(defaultLocs[0]?.id || "");
+              } else {
+                setCityId("");
+                setLocalityId("");
+              }
               setAddress("");
               setSelectedRoomTypes(["Single"]);
               setRoomPrices({ Single: { rent: "", deposit: "0" } });
@@ -367,11 +406,19 @@ export default function ListPgForm() {
             <select
               value={cityId}
               onChange={(e) => handleCityChange(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl bg-muted/40 focus-visible:bg-transparent border border-border font-medium text-foreground outline-none text-base cursor-pointer"
+              disabled={loadingLocations || cities.length === 0}
+              className="w-full px-4 py-3.5 rounded-xl bg-muted/40 focus-visible:bg-transparent border border-border font-medium text-foreground outline-none text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {loadingLocations ? (
+                <option value="">Loading cities...</option>
+              ) : (
+                <>
+                  <option value="">Select City</option>
+                  {cities.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
 
@@ -382,11 +429,23 @@ export default function ListPgForm() {
             <select
               value={localityId}
               onChange={(e) => setLocalityId(e.target.value)}
-              className="w-full px-4 py-3.5 rounded-xl bg-muted/40 focus-visible:bg-transparent border border-border font-medium text-foreground outline-none text-base cursor-pointer"
+              disabled={loadingLocations || !cityId || availableLocalities.length === 0}
+              className="w-full px-4 py-3.5 rounded-xl bg-muted/40 focus-visible:bg-transparent border border-border font-medium text-foreground outline-none text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {availableLocalities.map((loc) => (
-                <option key={loc.id} value={loc.id}>{loc.name}</option>
-              ))}
+              {loadingLocations ? (
+                <option value="">Loading areas...</option>
+              ) : !cityId ? (
+                <option value="">Select a city first</option>
+              ) : availableLocalities.length === 0 ? (
+                <option value="">No areas available for this city</option>
+              ) : (
+                <>
+                  <option value="">Select Area / Locality</option>
+                  {availableLocalities.map((loc) => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
         </div>
@@ -450,7 +509,7 @@ export default function ListPgForm() {
           <label className="text-sm font-bold text-foreground">
             Food Available
           </label>
-          <div className="flex gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {([
               { value: "INCLUDED", label: "Included in rent" },
               { value: "AVAILABLE", label: "Available at extra cost" },

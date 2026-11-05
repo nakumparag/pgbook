@@ -26,8 +26,8 @@ export function LocationContent({ basePath = "/owner/add-pg" }: { basePath?: str
   useEffect(() => {
     const load = async () => {
       const supabase = createClient();
-      const { data: c } = await supabase.from("cities").select("id, name").eq("is_active", true);
-      const { data: l } = await supabase.from("localities").select("id, name, city_id");
+      const { data: c } = await supabase.from("cities").select("id, name").eq("is_active", true).order("name");
+      const { data: l } = await supabase.from("localities").select("id, name, city_id").order("name");
       if (c) setCities(c);
       if (l) setLocalities(l);
 
@@ -113,10 +113,10 @@ export function LocationContent({ basePath = "/owner/add-pg" }: { basePath?: str
             <select
               value={localityId}
               onChange={e => setLocalityId(e.target.value)}
-              disabled={!cityId}
+              disabled={!cityId || availableLocalities.length === 0}
               className="flex h-12 w-full rounded-xl border border-border bg-transparent px-3 text-sm disabled:opacity-50"
             >
-              <option value="">Select Locality</option>
+              <option value="">{!cityId ? "Select City first" : availableLocalities.length === 0 ? "No localities available for this city" : "Select Locality"}</option>
               {availableLocalities.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>

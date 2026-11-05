@@ -39,20 +39,56 @@ export async function middleware(request: NextRequest) {
     return redirectResponse
   }
 
+  const hostname = request.headers.get('host') || ''
+  const isManagerSubdomain = hostname.startsWith('manager.')
+  const pathname = request.nextUrl.pathname
+
+  const managerPathMap: Record<string, string> = {
+    '/': '/manager',
+    '/features': '/manager/features',
+    '/pricing': '/manager/pricing',
+    '/login': '/manager/login',
+    '/signup': '/manager/signup',
+    '/forgot-password': '/manager/forgot-password',
+    '/reset-password': '/reset-password',
+    '/dashboard': '/owner/dashboard',
+    '/properties': '/owner/properties',
+    '/rooms': '/owner/rooms',
+    '/tenants': '/owner/tenants',
+    '/finance': '/owner/finance',
+    '/operations': '/owner/operations',
+    '/staff': '/owner/staff',
+    '/reports': '/owner/reports',
+    '/manager-portal': '/manager/manager-portal',
+    '/staff-portal': '/manager/staff-portal',
+    '/tenant-portal': '/manager/tenant-portal',
+  }
+  const internalManagerPath = isManagerSubdomain ? managerPathMap[pathname] : undefined
+  const routePath = internalManagerPath || pathname
+
   // Refresh session if expired - required for Server Components
   const { data: { user } } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
+  // Protected routes check (Notice: /manager, /manager/features, /manager/pricing, /manager/login, /manager/signup are public!)
+  const isProtectedOwnerRoute = routePath.startsWith('/owner') || routePath.startsWith('/manager/owner')
+  const isProtectedManagerRoute = routePath.startsWith('/manager/manager-portal')
+  const isProtectedStaffRoute = routePath.startsWith('/staff') || routePath.startsWith('/manager/staff-portal')
+  const isProtectedTenantRoute = routePath.startsWith('/tenant') || routePath.startsWith('/manager/tenant-portal')
+  const isProtectedUserRoute =
+    routePath === '/profile' || routePath.startsWith('/profile/') ||
+    routePath === '/dashboard' || routePath.startsWith('/dashboard/') ||
+    routePath === '/bookings' || routePath.startsWith('/bookings/') ||
+    routePath === '/favorites' || routePath.startsWith('/favorites/')
 
-  // Protected routes check
-  const isProtectedRoute = 
-    pathname === '/profile' || pathname.startsWith('/profile/') ||
-    pathname === '/dashboard' || pathname.startsWith('/dashboard/') ||
-    pathname === '/bookings' || pathname.startsWith('/bookings/') ||
-    pathname === '/favorites' || pathname.startsWith('/favorites/') ||
-    pathname === '/become-owner' || pathname.startsWith('/become-owner/') ||
-    pathname === '/owner' || pathname.startsWith('/owner/') ||
-    (pathname === '/admin' || pathname.startsWith('/admin/'))
+  const isAdminRoute = routePath === '/admin' || routePath.startsWith('/admin/')
+
+  const isProtectedRoute =
+    isProtectedOwnerRoute ||
+    isProtectedManagerRoute ||
+    isProtectedStaffRoute ||
+    isProtectedTenantRoute ||
+    isProtectedUserRoute ||
+    isAdminRoute
 
   // Check for local development admin session bypass
   const isDevAdmin =
@@ -60,36 +96,54 @@ export async function middleware(request: NextRequest) {
     request.cookies.get("pgbook_dev_admin_session")?.value === "true"
 
   if (!user) {
-    // If dev admin is enabled and accessing admin route, allow through
-    if (isDevAdmin && (pathname === '/admin' || pathname.startsWith('/admin/'))) {
+    if (isDevAdmin && isAdminRoute) {
       return supabaseResponse
     }
 
     if (isProtectedRoute) {
       const url = request.nextUrl.clone()
-      url.pathname = '/login'
+      // If attempting to access manager/owner routes, redirect to PG Manager login
+      if (isProtectedOwnerRoute || isProtectedManagerRoute || isProtectedStaffRoute) {
+        url.pathname = isManagerSubdomain ? '/login' : '/manager/login'
+      } else {
+        url.pathname = '/login'
+      }
       url.searchParams.set('next', pathname)
       return createRedirectResponse(url)
     }
   }
 
-  // Redirect logged in users away from auth pages
-  // Recovery links establish an authenticated session before the user chooses
-  // a new password, so keep /reset-password reachable for signed-in users.
-  const authRoutes = ['/login', '/signup', '/forgot-password']
-  const isAuthRoute = authRoutes.includes(pathname)
+  // Auth pages redirect for already logged-in users
+  const isMainAuthRoute = ['/login', '/signup', '/forgot-password'].includes(routePath)
+  const isManagerAuthRoute = ['/manager/login', '/manager/signup', '/manager/forgot-password'].includes(routePath)
 
-  if (user && isAuthRoute) {
+  if (user && (isMainAuthRoute || isManagerAuthRoute)) {
     const nextParam = request.nextUrl.searchParams.get('next') || request.nextUrl.searchParams.get('redirect')
-    const safeNext = (nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//')) ? nextParam : '/dashboard'
+    
+    // Fetch profile to do smart role-based redirect
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    let destination = '/dashboard'
+    if (profile?.role === 'ADMIN') {
+      destination = '/admin/dashboard'
+    } else if (profile?.role === 'OWNER' || isManagerAuthRoute) {
+      destination = '/owner/dashboard'
+    }
+
+    const safeNext = (nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//'))
+      ? nextParam
+      : (isManagerSubdomain && destination.startsWith('/owner/') ? destination.slice('/owner'.length) : destination)
     const url = request.nextUrl.clone()
     url.pathname = safeNext
-    url.search = '' // Strip any query parameters
+    url.search = ''
     return createRedirectResponse(url)
   }
 
   // Admin route protection for logged in users
-  const isAdminRoute = pathname === '/admin' || pathname.startsWith('/admin/')
   if (user && isAdminRoute) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -105,40 +159,23 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Owner route protection for logged in users
-  if (user && pathname.startsWith('/owner')) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    const { data: ownerData } = await supabase
-      .from('owner_profiles')
-      .select('status')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (profile?.role !== 'ADMIN' && ownerData?.status !== 'APPROVED') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/become-owner'
-      url.search = ''
-      return createRedirectResponse(url)
-    }
+  if (internalManagerPath) {
+    const url = request.nextUrl.clone()
+    url.pathname = internalManagerPath
+    const rewriteResponse = NextResponse.rewrite(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      rewriteResponse.cookies.set(cookie.name, cookie.value, cookie)
+    })
+    return rewriteResponse
   }
 
   return supabaseResponse
 }
 
+export const proxy = middleware
+
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

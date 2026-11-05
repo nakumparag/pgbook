@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
+import type { FoodStatus, RoomTypeEnum } from "@/types/database.types";
 
 export interface SubmitBasicPgResult {
   success: boolean;
@@ -51,13 +52,15 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
     } else if (legacyRent > 0) {
       submittedRooms = [{ type: legacyRoomType, rent: legacyRent, deposit: 0 }];
     }
-    const roomTypeEnumMap: Record<string, "PERSONAL" | "2_SHARING" | "3_SHARING" | "4_SHARING"> = {
+    const roomTypeEnumMap: Record<string, RoomTypeEnum> = {
       "Single": "PERSONAL", "2 Sharing": "2_SHARING", "3 Sharing": "3_SHARING", "4 Sharing": "4_SHARING", "Other": "PERSONAL",
     };
     const validRoomTypes = Object.keys(roomTypeEnumMap);
     const rent = submittedRooms.length ? Math.min(...submittedRooms.map((room) => room.rent)) : 0;
     const foodStatusRaw = formData.get("foodStatus") as string || (formData.get("foodAvailable") === "Yes" ? "AVAILABLE" : "NOT_AVAILABLE");
-    const foodStatus = ["INCLUDED", "AVAILABLE", "NOT_AVAILABLE", "BOTH"].includes(foodStatusRaw) ? foodStatusRaw : null;
+    const foodStatus: FoodStatus | null = ["INCLUDED", "AVAILABLE", "NOT_AVAILABLE", "BOTH"].includes(foodStatusRaw)
+      ? foodStatusRaw as FoodStatus
+      : null;
     const foodAvailable = foodStatus !== "NOT_AVAILABLE";
     const description = (formData.get("description") as string || "").trim();
     const contactPhone = (formData.get("contactPhone") as string || "").trim();
@@ -91,7 +94,7 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
     }
 
     const photoFiles = formData.getAll("photos") as File[];
-    if (photoFiles.length > 5 || photoFiles.some((file) => file.size > 0 && (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024))) {
+    if (photoFiles.length > 5 || photoFiles.some((file) => file.size > 0 && (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024))) {
       return { success: false, error: "Upload up to 5 JPG, PNG, or WEBP photos, each under 5 MB." };
     }
 
@@ -158,7 +161,7 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
         slug,
         address: `${localityNameInput ? localityNameInput + ", " : ""}${address}`,
         gender: "CO_LIVING", // Valid enum value
-        food_status: foodStatus as "INCLUDED" | "AVAILABLE" | "NOT_AVAILABLE" | "BOTH",
+        food_status: foodStatus,
         status: "DRAFT",
         monthly_rent_from: Math.min(...submittedRooms.map((room) => room.rent)),
         monthly_rent_to: Math.max(...submittedRooms.map((room) => room.rent)),
@@ -177,9 +180,17 @@ export async function submitBasicPg(formData: FormData): Promise<SubmitBasicPgRe
 
     // 7. Insert Room Configuration
     try {
-      const { error: roomError } = await supabase.from("rooms").insert({
+      const roomsToInsert = submittedRooms.map((room) => ({
         pg_id: pg.id,
-      });
+        room_type: roomTypeEnumMap[room.type] || "PERSONAL",
+        rent: room.rent,
+        security_deposit: room.deposit || 0,
+        total_beds: room.type === "Single" ? 1 : room.type === "2 Sharing" ? 2 : room.type === "3 Sharing" ? 3 : room.type === "4 Sharing" ? 4 : 1,
+        occupied_beds: 0,
+        food_available: foodAvailable,
+      }));
+
+      const { error: roomError } = await supabase.from("rooms").insert(roomsToInsert);
       if (roomError) {
         console.error("Failed to create room:", roomError);
         return { success: false, error: "Your PG was saved as a draft, but the room details could not be saved. Please contact support before submitting it again." };

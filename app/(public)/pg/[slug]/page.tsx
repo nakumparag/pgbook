@@ -304,22 +304,28 @@ export default async function PGDetail({ params }: PGDetailProps) {
           <div className="h-px w-full bg-border" />
 
           {/* Rules */}
-          {pg.rules && pg.rules.length > 0 && (
-            <>
-              <section>
-                <h2 className="text-2xl font-heading font-bold mb-6 text-foreground">PG Rules</h2>
-                <ul className="space-y-3">
-                  {pg.rules.map((rule: string, i: number) => (
-                    <li key={i} className="flex items-start gap-3 text-muted-foreground">
-                      <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                      <span className="font-medium text-lg leading-relaxed">{rule}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-              <div className="h-px w-full bg-border" />
-            </>
-          )}
+          {(() => {
+            const rulesList = Array.isArray(pg.rules)
+              ? pg.rules
+              : (typeof pg.rules === "string" && pg.rules.trim().length > 0 ? pg.rules.split("\n").filter(Boolean) : []);
+            if (!rulesList || rulesList.length === 0) return null;
+            return (
+              <>
+                <section>
+                  <h2 className="text-2xl font-heading font-bold mb-6 text-foreground">PG Rules</h2>
+                  <ul className="space-y-3">
+                    {rulesList.map((rule: string, i: number) => (
+                      <li key={i} className="flex items-start gap-3 text-muted-foreground">
+                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                        <span className="font-medium text-lg leading-relaxed">{rule}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+                <div className="h-px w-full bg-border" />
+              </>
+            );
+          })()}
 
           {/* Reviews */}
           <section>

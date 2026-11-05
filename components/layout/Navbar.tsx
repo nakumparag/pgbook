@@ -14,7 +14,8 @@ import {
   Heart,
   Search,
   ChevronDown,
-  Repeat,
+  ArrowUpRight,
+  Building,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -29,29 +30,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getPgManagerUrl } from "@/lib/site";
 
 const NAV_LINKS = [
   { href: "/explore", label: "Explore PGs" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated, user, profile, isOwner, activeMode, setActiveMode, signOut } = useAuth();
+  const { isAuthenticated, user, profile, signOut } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
-
-  const toggleMode = () => {
-    if (activeMode === 'user') {
-      setActiveMode('owner');
-      router.push('/owner/dashboard');
-    } else {
-      setActiveMode('user');
-      router.push('/dashboard');
-    }
-  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,6 +52,8 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const pgManagerUrl = getPgManagerUrl();
 
   return (
     <header
@@ -101,7 +95,7 @@ export function Navbar() {
               className={cn(
                 "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
                 pathname === link.href
-                  ? "text-primary bg-primary/8"
+                  ? "text-primary bg-primary/8 font-semibold"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
@@ -113,28 +107,20 @@ export function Navbar() {
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
 
-          {/* Role-based CTA (desktop) */}
-          {profile?.role === 'ADMIN' ? (
-            <Button asChild variant="ghost" className="hidden xl:flex font-semibold text-sm text-foreground hover:text-primary hover:bg-primary/8">
-              <Link href="/admin/dashboard">
-                Admin Dashboard
-              </Link>
-            </Button>
-          ) : isOwner ? (
-            <Button asChild variant="ghost" className="hidden xl:flex font-semibold text-sm text-foreground hover:text-primary hover:bg-primary/8">
-              <Link href="/owner/dashboard">
-                My PG Dashboard
-              </Link>
-            </Button>
-          ) : (
-            <Button asChild variant="ghost" className="hidden xl:flex font-semibold text-sm text-foreground hover:text-primary hover:bg-primary/8">
-              <Link href="/become-owner">
-                List Your PG
-              </Link>
-            </Button>
-          )}
+          {/* Prominent PG Manager CTA button */}
+          <Button
+            asChild
+            size="sm"
+            className="rounded-xl font-bold bg-foreground text-background hover:bg-foreground/90 gap-1.5 shadow-xs text-xs h-9 px-3.5"
+          >
+            <a href={pgManagerUrl} target="_blank" rel="noopener noreferrer">
+              <Building className="w-3.5 h-3.5 text-primary" />
+              <span>PG Manager</span>
+              <ArrowUpRight className="w-3.5 h-3.5 opacity-70" />
+            </a>
+          </Button>
 
-          {/* Desktop Auth */}
+          {/* Desktop Auth for Residents/Seekers */}
           <div className="hidden md:flex items-center gap-2">
             {isAuthenticated ? (
               <DropdownMenu>
@@ -169,28 +155,26 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href={profile?.role === 'ADMIN' ? "/admin/dashboard" : isOwner && activeMode === 'owner' ? "/owner/dashboard" : "/dashboard"} className="cursor-pointer flex items-center gap-2 py-2">
+                    <Link href="/dashboard" className="cursor-pointer flex items-center gap-2 py-2">
                       <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                      <span>Dashboard</span>
+                      <span>Saved & Bookings</span>
                     </Link>
                   </DropdownMenuItem>
-                  
-                  {isOwner && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={toggleMode} className="cursor-pointer flex items-center gap-2 py-2">
-                        <Repeat className="h-4 w-4 text-muted-foreground" />
-                        <span>Switch to {activeMode === 'owner' ? 'User' : 'Owner'} View</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/favorites" className="cursor-pointer flex items-center gap-2 py-2">
                       <Heart className="h-4 w-4 text-muted-foreground" />
                       <span>Saved PGs</span>
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <a href={pgManagerUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer flex items-center justify-between py-2 text-primary font-semibold">
+                      <span className="flex items-center gap-2">
+                        <Building className="h-4 w-4" />
+                        <span>Open PG Manager</span>
+                      </span>
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </a>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -203,14 +187,14 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <Link href="/login">
-                  <Button variant="ghost" className="font-semibold text-sm rounded-xl">
+                  <Button variant="ghost" className="font-semibold text-xs rounded-xl h-9">
                     Log in
                   </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button className="font-semibold text-sm rounded-xl gradient-primary border-none shadow-sm hover:opacity-90 transition-opacity">
+                  <Button className="font-semibold text-xs rounded-xl gradient-primary border-none shadow-xs hover:opacity-90 transition-opacity h-9 px-3">
                     Sign Up
                   </Button>
                 </Link>
@@ -220,133 +204,90 @@ export function Navbar() {
 
           {/* Mobile Actions */}
           <div className="flex md:hidden items-center gap-1">
-            {/* Mobile Search Icon */}
             <Link href="/explore" aria-label="Search PGs">
-              <Button variant="ghost" size="icon" className="rounded-xl">
-                <Search className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9">
+                <Search className="h-4 w-4" />
               </Button>
             </Link>
 
-            {/* Mobile Menu */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-xl" aria-label="Open menu">
+                <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" aria-label="Open menu">
                   {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80 flex flex-col p-0">
-                {/* Mobile Menu Header */}
-                <div className="flex items-center gap-2 p-5 border-b border-border">
-                  <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" fill="white"/>
-                    </svg>
+                <div className="flex items-center justify-between p-5 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" fill="white"/>
+                      </svg>
+                    </div>
+                    <span className="font-bold text-lg font-heading">PGBook</span>
                   </div>
-                  <span className="font-bold text-lg font-heading">PGBook</span>
                 </div>
 
-                {/* Nav Links */}
-                <nav className="flex flex-col p-4 gap-1" aria-label="Mobile navigation">
+                <nav className="flex flex-col p-4 gap-1 flex-1 overflow-y-auto">
                   {NAV_LINKS.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        "flex items-center px-4 py-3 rounded-xl text-base font-medium transition-colors",
-                        pathname === link.href
-                          ? "text-primary bg-primary/8"
-                          : "text-foreground hover:bg-muted"
-                      )}
+                      className="px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-muted text-foreground transition-colors"
                     >
                       {link.label}
                     </Link>
                   ))}
-                  {profile?.role === 'ADMIN' ? (
-                    <Link
-                      href="/admin/dashboard"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-primary hover:bg-primary/8 transition-colors"
-                    >
-                      Admin Dashboard
-                    </Link>
-                  ) : isOwner ? (
-                    <Link
-                      href="/owner/dashboard"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-primary hover:bg-primary/8 transition-colors"
-                    >
-                      My PG Dashboard
-                    </Link>
-                  ) : (
-                    <Link
-                      href="/become-owner"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-primary hover:bg-primary/8 transition-colors"
-                    >
-                      List Your PG
-                    </Link>
-                  )}
-                  {isOwner && (
-                    <button
-                      onClick={() => {
-                        toggleMode();
-                        setMobileOpen(false);
-                      }}
-                      className="flex items-center w-full px-4 py-3 rounded-xl text-base font-medium text-foreground hover:bg-muted transition-colors"
-                    >
-                      <Repeat className="w-5 h-5 mr-3 text-muted-foreground" />
-                      Switch to {activeMode === 'owner' ? 'User' : 'Owner'} View
-                    </button>
-                  )}
+
+                  <div className="my-2 border-t border-border/60" />
+
+                  <a
+                    href={pgManagerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between px-4 py-3 rounded-xl bg-foreground text-background font-bold text-sm shadow-xs mt-2"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-primary" />
+                      PG Business Manager
+                    </span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </a>
                 </nav>
 
-                {/* Mobile Auth */}
-                <div className="mt-auto p-4 border-t border-border flex flex-col gap-3">
+                <div className="p-4 border-t border-border">
                   {isAuthenticated ? (
-                    <>
-                      <div className="flex items-center gap-3 p-3 bg-muted rounded-xl">
-                        <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white font-bold shrink-0">
-                          {profile?.full_name?.[0]?.toUpperCase() || "U"}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-sm truncate">{profile?.full_name || "Account"}</p>
-                          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Link href="/favorites" onClick={() => setMobileOpen(false)}>
-                          <Button variant="outline" className="w-full rounded-xl text-sm" size="sm">
-                            <Heart className="mr-1.5 h-4 w-4" /> Saved
-                          </Button>
-                        </Link>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        className="w-full text-destructive hover:text-destructive hover:bg-destructive/8 rounded-xl"
-                        onClick={() => { signOut(); setMobileOpen(false); }}
-                      >
-                        <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                    <div className="space-y-2">
+                      <Button asChild variant="outline" className="w-full rounded-xl text-xs font-semibold">
+                        <Link href="/profile" onClick={() => setMobileOpen(false)}>My Profile</Link>
                       </Button>
-                    </>
+                      <Button
+                        onClick={() => {
+                          signOut();
+                          setMobileOpen(false);
+                        }}
+                        variant="ghost"
+                        className="w-full rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10"
+                      >
+                        Sign Out
+                      </Button>
+                    </div>
                   ) : (
-                    <div className="flex flex-col gap-2">
-                      <Link href="/login" className="w-full" onClick={() => setMobileOpen(false)}>
-                        <Button variant="outline" className="w-full rounded-xl font-semibold">
-                          Log In
-                        </Button>
-                      </Link>
-                      <Link href="/signup" className="w-full" onClick={() => setMobileOpen(false)}>
-                        <Button className="w-full rounded-xl font-semibold gradient-primary border-none">
-                          Sign Up Free
-                        </Button>
-                      </Link>
+                    <div className="flex gap-2">
+                      <Button asChild variant="outline" className="flex-1 rounded-xl text-xs font-semibold">
+                        <Link href="/login" onClick={() => setMobileOpen(false)}>Log in</Link>
+                      </Button>
+                      <Button asChild className="flex-1 rounded-xl text-xs font-bold gradient-primary border-none">
+                        <Link href="/signup" onClick={() => setMobileOpen(false)}>Sign Up</Link>
+                      </Button>
                     </div>
                   )}
                 </div>
               </SheetContent>
             </Sheet>
           </div>
+
         </div>
       </div>
     </header>

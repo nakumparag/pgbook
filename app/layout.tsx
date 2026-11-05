@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/hooks/useAuth";
 import { siteUrl } from "@/lib/site";
 
@@ -43,11 +41,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <Navbar />
-            <main className="grow flex flex-col mt-20">
-              {children}
-            </main>
-            <Footer />
+            {children}
           </AuthProvider>
         </ThemeProvider>
       </body>

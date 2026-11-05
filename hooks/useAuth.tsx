@@ -155,7 +155,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       setSession(null);
       setIsOwner(false);
-      router.replace("/login");
+      if (typeof window !== "undefined") {
+        const isManager =
+          window.location.pathname.startsWith("/owner") ||
+          window.location.pathname.startsWith("/manager") ||
+          window.location.hostname.startsWith("manager.");
+        window.location.href = isManager ? "/manager/login" : "/login";
+      } else {
+        router.replace("/login");
+      }
     }
   };
 

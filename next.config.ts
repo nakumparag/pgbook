@@ -9,7 +9,7 @@ const cspHeader = `
   img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://lh3.googleusercontent.com https://firebasestorage.googleapis.com https://iycsckulwtcawhhcqwgf.supabase.co;
   font-src 'self';
   connect-src 'self' https://iycsckulwtcawhhcqwgf.supabase.co wss://iycsckulwtcawhhcqwgf.supabase.co;
-  frame-ancestors 'none';
+  frame-ancestors ${isDev ? "'self' *" : "'none'"};
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -33,10 +33,12 @@ const nextConfig: NextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
+          ...(isDev ? [] : [
+            {
+              key: 'X-Frame-Options',
+              value: 'DENY',
+            },
+          ]),
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
